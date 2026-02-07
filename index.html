@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOB Guard | Man Overboard Security System</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<style>
+body { margin:0; font-family:Arial,Helvetica,sans-serif; background:#0f172a; color:#fff }
+header { padding:12px 20px; background:#020617; border-bottom:1px solid #1e293b }
+.status { display:flex; align-items:center; gap:12px }
+.badge { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600 }
+.safe { background:#10b981 }
+.alert { background:#ef4444 }
+.offline { background:#64748b }
+
+.dashboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; padding:16px }
+.card { background:#020617; padding:16px; border-radius:10px; border:1px solid #1e293b }
+.value { font-size:22px; font-weight:700 }
+
+#map { height:420px; margin:16px; border-radius:10px; border:1px solid #1e293b }
+
+.alert-panel {
+  position:fixed; bottom:20px; right:20px;
+  background:#7f1d1d; border:2px solid #ef4444;
+  padding:16px; border-radius:12px;
+  display:none; max-width:320px
+}
+.alert-panel h3 { margin:0 0 8px 0 }
+.alert-panel button {
+  width:100%; padding:10px; margin-top:10px;
+  background:#ef4444; border:none; color:#fff;
+  font-weight:700; cursor:pointer; border-radius:6px
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="status">
+    <strong>MOB Guard</strong>
+    <span id="liveBadge" class="badge offline">OFFLINE</span>
+    <span id="packetAge">Last packet: -- sec</span>
+  </div>
+</header>
+
+<section class="dashboard">
+  <div class="card"><div>Device</div><div class="value" id="deviceId">--</div></div>
+  <div class="card"><div>Latitude</div><div class="value" id="lat">--</div></div>
+  <div class="card"><div>Longitude</div><div class="value" id="lon">--</div></div>
+  <div class="card"><div>Speed (kn)</div><div class="value" id="speed">--</div></div>
+  <div class="card"><div>RSSI</div><div class="value" id="rssi">-- dBm</div></div>
+  <div class="card"><div>Battery</div><div class="value" id="battery">-- V</div></div>
+</section>
+
+<div id="map"></div>
+
+<div class="alert-panel" id="alertPanel">
+  <h3>🚨 MAN OVERBOARD</h3>
+  <div id="alertDetails"></div>
+  <button onclick="ackAlert()">Acknowledge</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ===============================
+   MAP INITIALIZATION
+================================ */
+const map = L.map('map').setView([20,0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
+
+let mobMarker = null;
+let lastPacketTime = null;
+let alertActive = false;
+
+/* ===============================
+   SOCKET.IO CONNECTION
+================================ */
+const socket = io("http://localhost:3000", { transports:["websocket"] });
+
+socket.on("connect", () => {
+  console.log("WebSocket connected");
+});
+
+socket.on("mob_update", packet => {
+  processPacket(packet);
+});
+
+/* ===============================
+   PACKET PROCESSING
+================================ */
+function processPacket(p) {
+  lastPacketTime = new Date(p.timestamp);
+
+  document.getElementById("deviceId").innerText = p.deviceId;
+  document.getElementById("lat").innerText = p.latitude.toFixed(5);
+  document.getElementById("lon").innerText = p.longitude.toFixed(5);
+  document.getElementById("speed").innerText = p.speed.toFixed(1);
+  document.getElementById("rssi").innerText = p.rssi + " dBm";
+  document.getElementById("battery").innerText = p.batteryVoltage.toFixed(2) + " V";
+
+  updateMap(p.latitude, p.longitude);
+
+  if (p.fallDetected && !alertActive) {
+    triggerAlert(p);
+  }
+}
+
+/* ===============================
+   MAP UPDATE
+================================ */
+function updateMap(lat, lon) {
+  if (!mobMarker) {
+    mobMarker = L.marker([lat, lon]).addTo(map);
+  } else {
+    mobMarker.setLatLng([lat, lon]);
+  }
+  map.setView([lat, lon], 16);
+}
+
+/* ===============================
+   ALERT HANDLING
+================================ */
+function triggerAlert(p) {
+  alertActive = true;
+  const panel = document.getElementById("alertPanel");
+  panel.style.display = "block";
+
+  document.getElementById("alertDetails").innerHTML =
+    `Device: ${p.deviceId}<br>
+     Lat: ${p.latitude.toFixed(5)}<br>
+     Lon: ${p.longitude.toFixed(5)}<br>
+     RSSI: ${p.rssi} dBm`;
+
+  playAlarm();
+}
+
+function ackAlert() {
+  document.getElementById("alertPanel").style.display = "none";
+  stopAlarm();
+  alertActive = false;
+}
+
+/* ===============================
+   AUDIO ALARM
+================================ */
+let audioCtx, osc;
+function playAlarm() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  osc = audioCtx.createOscillator();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+  osc.connect(audioCtx.destination);
+  osc.start();
+}
+function stopAlarm() {
+  if (osc) osc.stop();
+  if (audioCtx) audioCtx.close();
+}
+
+/* ===============================
+   LIVE / OFFLINE STATUS
+================================ */
+setInterval(() => {
+  if (!lastPacketTime) return;
+
+  const diff = Math.floor((Date.now() - lastPacketTime.getTime()) / 1000);
+  document.getElementById("packetAge").innerText = `Last packet: ${diff} sec`;
+
+  const badge = document.getElementById("liveBadge");
+  if (diff > 10) {
+    badge.innerText = "OFFLINE";
+    badge.className = "badge offline";
+  } else {
+    badge.innerText = "LIVE";
+    badge.className = "badge safe";
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
