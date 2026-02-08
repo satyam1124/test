@@ -10,1378 +10,7 @@
     <style>
         * {
             margin: 0;
-            padding: 0;<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOB Guard | Man Overboard Security System - Marine Safety Dashboard</title>
-    <meta name="description" content="Professional Man Overboard detection system for marine vessels. Real-time LoRa beacon tracking, GPS positioning, and emergency alerts for ship safety.">
-    <meta name="keywords" content="MOB, Man Overboard, Marine Safety, LoRa Tracking, GPS Beacon, Ship Security, Maritime Safety">
-    <meta name="author" content="MOB Guard Systems">
-    <meta name="robots" content="index, follow">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="MOB Guard | Man Overboard Security System">
-    <meta property="og:description" content="Real-time marine safety dashboard for Man Overboard detection and tracking.">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚓%3C/text%3E%3C/svg%3E">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #0f172a; --primary-light: #1e293b; --secondary: #0d1b2a;
-            --accent: #06b6d4; --accent-hover: #22d3ee; --text-primary: #f8fafc;
-            --text-secondary: #94a3b8; --text-muted: #64748b;
-            --status-safe: #10b981; --status-warning: #f59e0b; --status-alert: #ef4444; --status-info: #3b82f6;
-            --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
-            --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-            --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem;
-            --text-xl: 1.25rem; --text-2xl: 1.5rem; --text-3xl: 1.875rem;
-            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.3); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5); --shadow-glow: 0 0 20px rgba(6,182,212,0.3);
-            --transition-fast: 150ms cubic-bezier(0.4,0,0.2,1); --transition-normal: 250ms cubic-bezier(0.4,0,0.2,1);
-            --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; font-size: 16px; }
-        body { font-family: var(--font-sans); background: var(--primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-        .header { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(15,23,42,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(148,163,184,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-6); z-index: 1000; transition: all var(--transition-normal); }
-        .header-scrolled { background: rgba(15,23,42,0.98); box-shadow: var(--shadow-lg); }
-        .logo { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-xl); font-weight: 800; color: var(--accent); text-decoration: none; letter-spacing: -0.5px; transition: all var(--transition-fast); }
-        .logo:hover { color: var(--accent-hover); transform: scale(1.02); }
-        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem; box-shadow: var(--shadow-glow); }
-        .nav { display: flex; gap: var(--space-2); }
-        .nav-link { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); color: var(--text-secondary); text-decoration: none; font-weight: 500; font-size: var(--text-sm); border-radius: var(--radius-md); transition: all var(--transition-fast); position: relative; overflow: hidden; }
-        .nav-link:hover { color: var(--text-primary); background: rgba(148,163,184,0.1); }
-        .nav-link.active { color: var(--accent); background: rgba(6,182,212,0.15); }
-        .menu-toggle { display: none; width: 40px; height: 40px; background: transparent; border: none; color: var(--text-primary); font-size: 1.25rem; cursor: pointer; }
-        .user-menu { display: flex; align-items: center; gap: var(--space-4); }
-        .role-badge { padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .role-badge.admin { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: var(--primary); }
-        .role-badge.viewer { background: rgba(59,130,246,0.2); color: var(--status-info); border: 1px solid rgba(59,130,246,0.3); }
-        .logout-btn { width: 36px; height: 36px; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); border-radius: var(--radius-md); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
-        .logout-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: var(--status-alert); transform: rotate(90deg); }
-        .main-content { margin-top: 70px; padding: var(--space-6); min-height: calc(100vh - 70px); }
-        .status-banner { width: 100%; padding: var(--space-5) var(--space-6); display: flex; align-items: center; gap: var(--space-4); border-radius: var(--radius-lg); margin-bottom: var(--space-6); transition: all var(--transition-normal); position: relative; overflow: hidden; }
-        .status-banner::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-        .status-banner.safe { background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 100%); border: 1px solid rgba(16,185,129,0.3); }
-        .status-banner.safe::before { background: linear-gradient(90deg, var(--status-safe), transparent); }
-        .status-banner.warning { background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%); border: 1px solid rgba(245,158,11,0.3); }
-        .status-banner.alert { background: linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%); border: 1px solid rgba(239,68,68,0.4); animation: pulse-alert 2s ease-in-out infinite; }
-        @keyframes pulse-alert { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 30px 10px rgba(239,68,68,0.15); } }
-        .status-icon-wrapper { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; }
-        .status-banner.safe .status-icon-wrapper { background: rgba(16,185,129,0.2); color: var(--status-safe); }
-        .status-banner.warning .status-icon-wrapper { background: rgba(245,158,11,0.2); color: var(--status-warning); }
-        .status-banner.alert .status-icon-wrapper { background: rgba(239,68,68,0.2); color: var(--status-alert); animation: pulse-icon 1.5s ease-in-out infinite; }
-        @keyframes pulse-icon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .status-content { flex: 1; }
-        .status-label { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: var(--space-1); }
-        .status-text { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.5px; }
-        .status-banner.safe .status-text { color: var(--status-safe); }
-        .status-banner.warning .status-text { color: var(--status-warning); }
-        .status-banner.alert .status-text { color: var(--status-alert); }
-        .status-meta { display: flex; align-items: center; gap: var(--space-4); color: var(--text-secondary); font-size: var(--text-sm); }
-        .status-indicator { width: 8px; height: 8px; border-radius: 50%; animation: blink 2s infinite; }
-        .status-banner.safe .status-indicator { background: var(--status-safe); }
-        .status-banner.warning .status-indicator { background: var(--status-warning); }
-        .status-banner.alert .status-indicator { background: var(--status-alert); }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-4); }
-        .section-title { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); }
-        .section-title i { width: 36px; height: 36px; background: rgba(6,182,212,0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: var(--text-base); }
-        .section-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5); margin-bottom: var(--space-8); }
-        @media (max-width: 1400px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
-        .card { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(148,163,184,0.1); border-radius: var(--radius-lg); padding: var(--space-5); transition: all var(--transition-normal); position: relative; overflow: hidden; }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0; transition: opacity var(--transition-normal); }
-        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(6,182,212,0.2); }
-        .card:hover::before { opacity: 1; }
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
-        .card-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-        .card-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: var(--text-lg); transition: all var(--transition-fast); }
-        .card-icon.teal { background: rgba(6,182,212,0.15); color: var(--accent); }
-        .card-icon.blue { background: rgba(59,130,246,0.15); color: var(--status-info); }
-        .card-icon.amber { background: rgba(245,158,11,0.15); color: var(--status-warning); }
-        .card-icon.red { background: rgba(239,68,68,0.15); color: var(--status-alert); }
-        .card:hover .card-icon { transform: scale(1.1); }
-        .card-value { font-size: var(--text-3xl); font-weight: 800; color: var(--text-primary); margin-bottom: var(--space-2); font-family: var(--font-mono); letter-spacing: -1px; }
-        .card-value.small { font-size: var(--text-xl); }
-        .card-subtitle { font-size: var(--text-sm); color: var(--text-secondary); display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-        .card-value.update-flash { animation: flash-update 400ms ease; }
-        @keyframes flash-update { 0% { color: var(--text-primary); } 50% { color: var(--accent); text-shadow: 0 0 20px var(--accent); } 100% { color: var(--text-primary); } }
-        .signal-bars { display: flex; align-items: flex-end; gap: 4px; height: 32px; margin-top: var(--space-3); }
-        .signal-bar { width: 8px; background: rgba(148,163,184,0.2); border-radius: 2px; transition: all var(--transition-fast); }
-        .signal-bar:nth-child(1) { height: 8px; } .signal-bar:nth-child(2) { height: 12px; } .signal-bar:nth-child(3) { height: 16px; } .signal-bar:nth-child(4) { height: 20px; } .signal-bar:nth-child(5) { height: 24px; }
-        .signal-bar.active { background: var(--status-safe); box-shadow: 0 0 8px var(--status-safe); }
-        .signal-bar.active.warning { background: var(--status-warning); box-shadow: 0 0 8px var(--status-warning); }
-        .signal-bar.active.critical { background: var(--status-alert); box-shadow: 0 0 8px var(--status-alert); }
-        .charts-section { margin-bottom: var(--space-8); }
-        .charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-5); }
-        @media (max-width: 1200px) { .charts-grid { grid-template-columns: 1fr; } }
-        .chart-card { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(148,163,184,0.1); border-radius: var(--radius-lg); padding: var(--space-5); }
-        .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
-        .chart-title { font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); }
-        .chart-value { font-size: var(--text-lg); font-weight: 700; color: var(--accent); }
-        .chart-container { height: 200px; position: relative; }
-        .map-section { margin-bottom: var(--space-8); }
-        .map-container { height: 550px; border-radius: var(--radius-lg); border: 1px solid rgba(148,163,184,0.1); overflow: hidden; position: relative; background: var(--secondary); }
-        @media (max-width: 768px) { .map-container { height: 400px; } }
-        #map { width: 100%; height: 100%; }
-        .map-controls { position: absolute; top: var(--space-4); right: var(--space-4); z-index: 500; display: flex; flex-direction: column; gap: var(--space-2); }
-        .map-btn { width: 44px; height: 44px; background: var(--primary); border: 1px solid rgba(148,163,184,0.2); border-radius: var(--radius-md); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: var(--text-base); transition: all var(--transition-fast); box-shadow: var(--shadow-md); }
-        .map-btn:hover { background: var(--accent); color: var(--primary); border-color: var(--accent); transform: scale(1.05); }
-        .replay-controls { position: absolute; bottom: var(--space-4); left: 50%; transform: translateX(-50%); z-index: 500; display: flex; align-items: center; gap: var(--space-3); background: var(--primary); padding: var(--space-3) var(--space-4); border-radius: var(--radius-xl); border: 1px solid rgba(148,163,184,0.2); box-shadow: var(--shadow-lg); }
-        .replay-btn { width: 36px; height: 36px; background: transparent; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); transition: all var(--transition-fast); }
-        .replay-btn:hover { background: rgba(6,182,212,0.2); color: var(--accent); }
-        .replay-progress { width: 200px; height: 6px; background: rgba(148,163,184,0.2); border-radius: 3px; overflow: hidden; cursor: pointer; }
-        .replay-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-hover)); border-radius: 3px; transition: width var(--transition-fast); }
-        .replay-time { font-size: var(--text-xs); color: var(--text-secondary); font-family: var(--font-mono); min-width: 80px; text-align: center; }
-        .mob-marker { width: 36px; height: 36px; background: var(--status-alert); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 0 rgba(239,68,68,0.7); animation: mob-pulse 1.5s infinite; display: flex; align-items: center; justify-content: center; }
-        @keyframes mob-pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 20px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
-        .ship-marker { width: 28px; height: 28px; background: white; border-radius: 50%; border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); }
-        .radar-scan {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100px;
-            height: 100px;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            border: 2px solid rgba(6,182,212,0.3);
-            animation: radar-pulse 2s infinite;
-            pointer-events: none;
-            z-index: 400;
-        }
-        @keyframes radar-pulse {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
-        }
-        .alert-panel { position: fixed; bottom: var(--space-6); right: var(--space-6); width: 420px; max-width: calc(100vw - var(--space-12)); background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 2px solid var(--status-alert); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: var(--shadow-lg), 0 0 40px rgba(239,68,68,0.3); z-index: 2000; transform: translateX(150%); transition: transform var(--transition-slow); }
-        .alert-panel.active { transform: translateX(0); }
-        .alert-panel.silenced { border-color: var(--status-warning); box-shadow: var(--shadow-lg), 0 0 40px rgba(245,158,11,0.2); }
-        .alert-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
-        .alert-icon { width: 48px; height: 48px; background: rgba(239,68,68,0.2); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--status-alert); animation: shake 0.5s ease-in-out infinite; }
-        .alert-panel.silenced .alert-icon { background: rgba(245,158,11,0.2); color: var(--status-warning); animation: none; }
-        @keyframes shake { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-        .alert-title { font-size: var(--text-xl); font-weight: 800; color: var(--status-alert); letter-spacing: -0.5px; }
-        .alert-panel.silenced .alert-title { color: var(--status-warning); }
-        .alert-type { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .alert-message { color: var(--text-secondary); margin-bottom: var(--space-4); line-height: 1.6; }
-        .alert-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); padding: var(--space-3); background: rgba(0,0,0,0.2); border-radius: var(--radius-md); }
-        .alert-detail { display: flex; flex-direction: column; gap: var(--space-1); }
-        .alert-detail-label { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; }
-        .alert-detail-value { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); }
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-radius: var(--radius-md); font-weight: 600; font-size: var(--text-sm); cursor: pointer; border: none; transition: all var(--transition-fast); position: relative; overflow: hidden; }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: var(--primary); box-shadow: 0 4px 14px rgba(6,182,212,0.4); }
-        .btn-primary:hover { box-shadow: 0 6px 20px rgba(6,182,212,0.5); transform: translateY(-1px); }
-        .btn-danger { background: linear-gradient(135deg, var(--status-alert) 0%, #f87171 100%); color: white; box-shadow: 0 4px 14px rgba(239,68,68,0.4); }
-        .btn-secondary { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: var(--text-secondary); }
-        .btn-secondary:hover { background: rgba(148,163,184,0.2); color: var(--text-primary); border-color: rgba(148,163,184,0.3); }
-        .btn-full { width: 100%; }
-        .history-section { margin-bottom: var(--space-8); }
-        .history-controls { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: var(--space-2); }
-        .filter-label { font-size: var(--text-xs); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .filter-input { background: rgba(148,163,184,0.05); border: 1px solid rgba(148,163,184,0.15); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: var(--text-primary); font-size: var(--text-sm); min-width: 140px; transition: all var(--transition-fast); }
-        .filter-input:focus { outline: none; border-color: var(--accent); background: rgba(6,182,212,0.05); }
-        .table-wrapper { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(148,163,184,0.1); border-radius: var(--radius-lg); overflow: hidden; }
-        .table-container { overflow-x: auto; max-height: 450px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-        thead { position: sticky; top: 0; background: var(--primary); z-index: 10; }
-        th { padding: var(--space-4) var(--space-4); text-align: left; font-weight: 700; text-transform: uppercase; font-size: var(--text-xs); letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid rgba(148,163,184,0.1); white-space: nowrap; }
-        td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid rgba(148,163,184,0.05); font-family: var(--font-mono); font-size: var(--text-xs); white-space: nowrap; }
-        tbody tr { transition: background var(--transition-fast); }
-        tbody tr:hover { background: rgba(6,182,212,0.05); }
-        .status-badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; }
-        .status-badge.safe { background: rgba(16,185,129,0.15); color: var(--status-safe); }
-        .status-badge.warning { background: rgba(245,158,11,0.15); color: var(--status-warning); }
-        .status-badge.alert { background: rgba(239,68,68,0.15); color: var(--status-alert); }
-        .rssi-good { color: var(--status-safe); } .rssi-warning { color: var(--status-warning); } .rssi-critical { color: var(--status-alert); font-weight: 700; }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 3000; opacity: 0; visibility: hidden; transition: all var(--transition-normal); padding: var(--space-4); }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(148,163,184,0.15); border-radius: var(--radius-xl); padding: var(--space-10); width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); transform: translateY(-30px) scale(0.95); transition: all var(--transition-slow); }
-        .modal-overlay.active .modal { transform: translateY(0) scale(1); }
-        .modal-header { text-align: center; margin-bottom: var(--space-8); }
-        .modal-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-5); font-size: 2.5rem; color: var(--primary); box-shadow: var(--shadow-glow); }
-        .modal-title { font-size: var(--text-2xl); font-weight: 800; margin-bottom: var(--space-2); letter-spacing: -0.5px; }
-        .modal-subtitle { color: var(--text-secondary); font-size: var(--text-sm); }
-        .form-group { margin-bottom: var(--space-5); }
-        .form-label { display: block; font-size: var(--text-xs); font-weight: 700; margin-bottom: var(--space-2); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-input-wrapper { position: relative; }
-        .form-input-icon { position: absolute; left: var(--space-4); top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: var(--text-base); }
-        .form-input { width: 100%; background: rgba(148,163,184,0.05); border: 1px solid rgba(148,163,184,0.15); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); padding-left: var(--space-10); color: var(--text-primary); font-size: var(--text-base); transition: all var(--transition-fast); }
-        .form-input:focus { outline: none; border-color: var(--accent); background: rgba(6,182,212,0.05); box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
-        .form-error { display: flex; align-items: center; gap: var(--space-2); color: var(--status-alert); font-size: var(--text-sm); margin-top: var(--space-2); opacity: 0; transform: translateY(-10px); transition: all var(--transition-fast); }
-        .form-error.active { opacity: 1; transform: translateY(0); }
-        .demo-credentials { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); border-radius: var(--radius-md); padding: var(--space-5); margin-top: var(--space-6); }
-        .demo-credentials-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: var(--space-3); letter-spacing: 1px; display: flex; align-items: center; gap: var(--space-2); }
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: flex !important; }
-        .footer { background: var(--primary-light); border-top: 1px solid rgba(148,163,184,0.1); padding: var(--space-5) var(--space-6); margin-top: auto; }
-        .footer-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-sm); color: var(--text-muted); }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-        .loading-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s;
-        }
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(6,182,212,0.3);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        kbd {
-            background: rgba(148,163,184,0.2);
-            border: 1px solid rgba(148,163,184,0.3);
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-family: var(--font-mono);
-            font-size: 0.9em;
-        }
-        .crew-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
-        .crew-card { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(148,163,184,0.1); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-4); transition: all var(--transition-fast); }
-        .crew-card:hover { border-color: rgba(6,182,212,0.3); transform: translateY(-2px); }
-        .crew-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; color: var(--primary); }
-        .crew-info { flex: 1; }
-        .crew-name { font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1); }
-        .crew-role { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; }
-        .crew-status { width: 12px; height: 12px; border-radius: 50%; background: var(--status-safe); box-shadow: 0 0 8px var(--status-safe); }
-        .crew-status.alert { background: var(--status-alert); box-shadow: 0 0 8px var(--status-alert); animation: blink 1s infinite; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--primary); }
-        ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 4px; }
-        @media (max-width: 1024px) {
-            .nav { display: none; position: absolute; top: 70px; left: 0; right: 0; background: var(--primary); flex-direction: column; padding: var(--space-4); border-bottom: 1px solid rgba(148,163,184,0.1); gap: var(--space-2); z-index: 999; }
-            .nav.active { display: flex; }
-            .menu-toggle { display: flex; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .history-controls { flex-direction: column; align-items: stretch; }
-        }
-        @media (max-width: 640px) {
-            .alert-panel { left: var(--space-4); right: var(--space-4); width: auto; }
-            .replay-progress { width: 100%; }
-            .footer-content { flex-direction: column; text-align: center; }
-        }
-    </style>
-</head>
-<body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <header class="header" role="banner">
-        <div style="display:flex;align-items:center">
-            <a href="#" class="logo" aria-label="MOB Guard Home">
-                <div class="logo-icon"><i class="fas fa-anchor" aria-hidden="true"></i></div>
-                <span>MOB Guard</span>
-            </a>
-            <div style="display:flex;align-items:center;gap:var(--space-2);margin-left:var(--space-4)">
-                <span class="status-indicator" style="background:var(--status-safe);animation:blink 2s infinite"></span>
-                <span style="font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase">Live</span>
-            </div>
-        </div>
-        <button class="menu-toggle" aria-label="Toggle navigation menu" onclick="toggleNav()"><i class="fas fa-bars"></i></button>
-        <nav class="nav" role="navigation" aria-label="Main navigation">
-            <a href="#dashboard" class="nav-link active" data-section="dashboard" aria-current="page" onclick="navigateToSection('dashboard')"><i class="fas fa-tachometer-alt" aria-hidden="true"></i><span>Dashboard</span></a>
-            <a href="#map" class="nav-link" data-section="map" onclick="navigateToSection('map')"><i class="fas fa-map-marked-alt" aria-hidden="true"></i><span>Map</span></a>
-            <a href="#crew" class="nav-link" data-section="crew" onclick="navigateToSection('crew')"><i class="fas fa-users" aria-hidden="true"></i><span>Crew</span></a>
-            <a href="#history" class="nav-link" data-section="history" onclick="navigateToSection('history')"><i class="fas fa-history" aria-hidden="true"></i><span>History</span></a>
-            <a href="#settings" class="nav-link admin-only" data-section="settings" style="display:none" onclick="navigateToSection('settings')"><i class="fas fa-cog" aria-hidden="true"></i><span>Settings</span></a>
-        </nav>
-        <div class="user-menu">
-            <button class="logout-btn" onclick="showHelp()" aria-label="Help" style="margin-right:var(--space-2)">
-                <i class="fas fa-question-circle" aria-hidden="true"></i>
-            </button>
-            <div class="user-info"><span class="role-badge" id="userRole">Viewer</span><span class="username" id="username">Guest</span></div>
-            <button class="logout-btn" onclick="logout()" aria-label="Logout"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></button>
-        </div>
-    </header>
-
-    <main class="main-content" role="main">
-        <div class="status-banner safe" id="statusBanner" role="status" aria-live="polite">
-            <div class="status-icon-wrapper"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
-            <div class="status-content"><div class="status-label">System Status</div><div class="status-text" id="statusText">System Normal</div></div>
-            <div class="status-meta"><span class="status-indicator" aria-hidden="true"></span><span id="statusTime">Last update: --:--:--</span></div>
-        </div>
-
-        <section id="dashboard" class="dashboard-section" aria-labelledby="dashboard-heading">
-            <h2 id="dashboard-heading" class="sr-only">Telemetry Dashboard</h2>
-            <div class="dashboard-grid">
-                <article class="card" aria-label="GPS Position">
-                    <div class="card-header"><span class="card-title">GPS Position</span><div class="card-icon teal"><i class="fas fa-satellite-dish" aria-hidden="true"></i></div></div>
-                    <div class="card-value" id="gpsCoords">--.-----, --.-----</div>
-                    <div class="card-subtitle"><span><i class="fas fa-satellite" aria-hidden="true"></i> <span id="satelliteCount">0</span> satellites</span><span>|</span><span>Fix: <strong id="gpsFix" style="color:var(--status-safe)">--</strong></span></div>
-                </article>
-                <article class="card" aria-label="Speed and Course">
-                    <div class="card-header"><span class="card-title">Speed & Course</span><div class="card-icon blue"><i class="fas fa-compass" aria-hidden="true"></i></div></div>
-                    <div class="card-value"><span id="speed">0.0</span> <span style="font-size:var(--text-lg)">kn</span></div>
-                    <div class="card-subtitle"><span><i class="fas fa-location-arrow" aria-hidden="true"></i> <span id="course">0</span>°</span><span>|</span><span id="speedStatus">Stationary</span></div>
-                </article>
-                <article class="card" aria-label="Signal Strength">
-                    <div class="card-header"><span class="card-title">Signal Strength</span><div class="card-icon amber" id="rssiIcon"><i class="fas fa-signal" aria-hidden="true"></i></div></div>
-                    <div class="card-value" id="rssiValue">-- dBm</div>
-                    <div class="signal-bars" id="signalBars" role="img" aria-label="Signal strength indicator"><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div></div>
-                </article>
-                <article class="card" aria-label="Beacon Status">
-                    <div class="card-header"><span class="card-title">Beacon Status</span><div class="card-icon teal"><i class="fas fa-broadcast-tower" aria-hidden="true"></i></div></div>
-                    <div class="card-value small" id="deviceId">--</div>
-                    <div class="card-subtitle"><span><i class="fas fa-mountain" aria-hidden="true"></i> <span id="altitude">0</span>m</span><span>|</span><span><i class="fas fa-clock" aria-hidden="true"></i> <span id="lastSeen">--:--:--</span></span></div>
-                </article>
-            </div>
-        </section>
-
-        <section class="charts-section" aria-labelledby="charts-heading">
-            <div class="section-header"><h2 class="section-title" id="charts-heading"><i class="fas fa-chart-area" aria-hidden="true"></i>Real-time Analytics</h2></div>
-            <div class="charts-grid">
-                <article class="chart-card"><div class="chart-header"><span class="chart-title">Signal Strength History</span><span class="chart-value" id="rssiAvg">-- dBm</span></div><div class="chart-container"><canvas id="rssiChart"></canvas></div></article>
-                <article class="chart-card"><div class="chart-header"><span class="chart-title">Speed Over Time</span><span class="chart-value" id="speedAvg">-- kn</span></div><div class="chart-container"><canvas id="speedChart"></canvas></div></article>
-                <article class="chart-card"><div class="chart-header"><span class="chart-title">Packet Rate</span><span class="chart-value" id="packetRate">-- /min</span></div><div class="chart-container"><canvas id="packetChart"></canvas></div></article>
-            </div>
-        </section>
-
-        <section id="map" class="map-section" aria-labelledby="map-heading">
-            <div class="section-header">
-                <h2 class="section-title" id="map-heading"><i class="fas fa-map-marked-alt" aria-hidden="true"></i>Live Tracking Map</h2>
-                <div class="section-actions">
-                    <button class="btn btn-danger" onclick="simulateMOB()" style="animation:pulse-alert 2s infinite">
-                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i><span>TEST MOB ALERT</span>
-                    </button>
-                    <button class="btn btn-primary admin-only" onclick="clearTrack()" style="display:none"><i class="fas fa-trash" aria-hidden="true"></i><span>Clear Track</span></button>
-                </div>
-            </div>
-            <div class="map-container">
-                <div id="map" role="application" aria-label="Interactive tracking map"></div>
-                <div class="radar-scan"></div>
-                <div class="map-controls">
-                    <button class="map-btn" onclick="centerOnMOB()" title="Center on MOB" aria-label="Center map on MOB position"><i class="fas fa-crosshairs" aria-hidden="true"></i></button>
-                    <button class="map-btn" onclick="centerOnShip()" title="Center on Ship" aria-label="Center map on ship position"><i class="fas fa-ship" aria-hidden="true"></i></button>
-                    <button class="map-btn" onclick="toggleFullscreen()" title="Fullscreen" aria-label="Toggle fullscreen map"><i class="fas fa-expand" aria-hidden="true"></i></button>
-                </div>
-                <div class="replay-controls" id="replayControls">
-                    <button class="replay-btn" onclick="toggleReplay()" id="replayBtn" aria-label="Play or pause track replay"><i class="fas fa-play" aria-hidden="true"></i></button>
-                    <div class="replay-progress" onclick="seekReplay(event)"><div class="replay-progress-bar" id="replayProgress" style="width:0%"></div></div>
-                    <span class="replay-time" id="replayTime">00:00 / 00:00</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="crew" class="crew-section" aria-labelledby="crew-heading" style="display:none">
-            <div class="section-header">
-                <h2 class="section-title" id="crew-heading"><i class="fas fa-users" aria-hidden="true"></i>Crew Members</h2>
-                <div class="section-actions">
-                    <button class="btn btn-primary admin-only" onclick="addCrewMember()" style="display:none"><i class="fas fa-plus" aria-hidden="true"></i><span>Add Member</span></button>
-                </div>
-            </div>
-            <div class="crew-grid" id="crewGrid"></div>
-        </section>
-
-        <section id="history" class="history-section" aria-labelledby="history-heading" style="display:none">
-            <div class="section-header">
-                <h2 class="section-title" id="history-heading"><i class="fas fa-history" aria-hidden="true"></i>Event History</h2>
-                <div class="history-controls">
-                    <div class="filter-group"><label class="filter-label" for="filterFrom">From Date</label><input type="date" class="filter-input" id="filterFrom" aria-label="Filter from date"></div>
-                    <div class="filter-group"><label class="filter-label" for="filterTo">To Date</label><input type="date" class="filter-input" id="filterTo" aria-label="Filter to date"></div>
-                    <div class="filter-group"><label class="filter-label" for="filterStatus">Status</label><select class="filter-input" id="filterStatus" aria-label="Filter by status"><option value="all">All</option><option value="safe">Safe</option><option value="warning">Warning</option><option value="alert">Alert</option></select></div>
-                    <button class="btn btn-secondary" onclick="applyFilters()"><i class="fas fa-filter" aria-hidden="true"></i><span>Apply</span></button>
-                    <button class="btn btn-primary" onclick="exportLogs()"><i class="fas fa-download" aria-hidden="true"></i><span>Export CSV</span></button>
-                    <button class="btn btn-danger admin-only" onclick="clearLogs()" style="display:none"><i class="fas fa-trash" aria-hidden="true"></i><span>Clear</span></button>
-                </div>
-            </div>
-            <div class="table-wrapper">
-                <div class="table-container" role="region" aria-label="Event history table" tabindex="0">
-                    <table id="historyTable">
-                        <thead><tr><th scope="col">Timestamp</th><th scope="col">Crew Member</th><th scope="col">Device ID</th><th scope="col">Latitude</th><th scope="col">Longitude</th><th scope="col">Speed</th><th scope="col">RSSI</th><th scope="col">Status</th></tr></thead>
-                        <tbody id="historyBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section id="settings" class="settings-section" aria-labelledby="settings-heading" style="display:none">
-            <div class="section-header">
-                <h2 class="section-title" id="settings-heading"><i class="fas fa-cog" aria-hidden="true"></i>System Settings</h2>
-            </div>
-            <div class="dashboard-grid">
-                <article class="card">
-                    <div class="card-header"><span class="card-title">Map Theme</span><div class="card-icon blue"><i class="fas fa-map" aria-hidden="true"></i></div></div>
-                    <div class="card-subtitle" style="margin-top:var(--space-3)">
-                        <select class="filter-input" id="mapTheme" onchange="changeMapTheme()" style="width:100%">
-                            <option value="standard">Standard (Colorful)</option>
-                            <option value="satellite">Satellite (Realistic)</option>
-                            <option value="dark">Dark (Marine)</option>
-                        </select>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-header"><span class="card-title">Auto Refresh</span><div class="card-icon teal"><i class="fas fa-sync" aria-hidden="true"></i></div></div>
-                    <div class="card-subtitle" style="margin-top:var(--space-3)">
-                        <select class="filter-input" id="refreshRate" onchange="changeRefreshRate()" style="width:100%">
-                            <option value="3000">3 seconds</option>
-                            <option value="5000">5 seconds</option>
-                            <option value="10000">10 seconds</option>
-                            <option value="30000">30 seconds</option>
-                        </select>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-header"><span class="card-title">Data Retention</span><div class="card-icon amber"><i class="fas fa-database" aria-hidden="true"></i></div></div>
-                    <div class="card-subtitle" style="margin-top:var(--space-3)">
-                        <select class="filter-input" id="dataRetention" onchange="changeDataRetention()" style="width:100%">
-                            <option value="7">7 days</option>
-                            <option value="30" selected>30 days</option>
-                            <option value="90">90 days</option>
-                            <option value="365">1 year</option>
-                        </select>
-                    </div>
-                </article>
-                <article class="card">
-                    <div class="card-header"><span class="card-title">Alert Settings</span><div class="card-icon red"><i class="fas fa-bell" aria-hidden="true"></i></div></div>
-                    <div class="card-subtitle" style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)">
-                        <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
-                            <input type="checkbox" id="soundAlerts" checked onchange="toggleSoundAlerts()"> Sound Alerts
-                        </label>
-                        <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
-                            <input type="checkbox" id="pushNotifications" onchange="togglePushNotifications()"> Push Notifications
-                        </label>
-                    </div>
-                </article>
-            </div>
-        </section>
-    </main>
-
-    <div class="alert-panel" id="alertPanel" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="alert-header"><div class="alert-icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></div><div><div class="alert-type">Emergency Alert</div><div class="alert-title" id="alertTitle">MAN OVERBOARD</div></div></div>
-        <div class="alert-message" id="alertMessage">Emergency alert triggered. Check map for position.</div>
-        <div class="alert-details">
-            <div class="alert-detail"><span class="alert-detail-label">Time</span><span class="alert-detail-value" id="alertTime">--:--:--</span></div>
-            <div class="alert-detail"><span class="alert-detail-label">Crew</span><span class="alert-detail-value" id="alertCrew">--</span></div>
-            <div class="alert-detail"><span class="alert-detail-label">Position</span><span class="alert-detail-value" id="alertPosition">--, --</span></div>
-            <div class="alert-detail"><span class="alert-detail-label">Signal</span><span class="alert-detail-value" id="alertSignal">-- dBm</span></div>
-        </div>
-        <div class="alert-actions"><button class="btn btn-danger btn-full" onclick="acknowledgeAlert()"><i class="fas fa-check" aria-hidden="true"></i><span>Acknowledge Alert</span></button></div>
-    </div>
-
-    <div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="login-title">
-        <div class="modal">
-            <div class="modal-header"><div class="modal-logo"><i class="fas fa-anchor" aria-hidden="true"></i></div><h2 class="modal-title" id="login-title">MOB Guard</h2><p class="modal-subtitle">Man Overboard Security System</p></div>
-            <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
-                <div class="form-group"><label class="form-label" for="loginUsername">Username</label><div class="form-input-wrapper"><i class="fas fa-user form-input-icon" aria-hidden="true"></i><input type="text" class="form-input" id="loginUsername" placeholder="Enter username" required autocomplete="username" aria-required="true"></div></div>
-                <div class="form-group"><label class="form-label" for="loginPassword">Password</label><div class="form-input-wrapper"><i class="fas fa-lock form-input-icon" aria-hidden="true"></i><input type="password" class="form-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password" aria-required="true"></div></div>
-                <div class="form-error" id="loginError" role="alert"><i class="fas fa-exclamation-circle" aria-hidden="true"></i><span>Invalid credentials. Please try again.</span></div>
-                <button type="submit" class="btn btn-primary btn-full" style="margin-top:var(--space-4)"><i class="fas fa-sign-in-alt" aria-hidden="true"></i><span>Sign In</span></button>
-                <button type="button" class="btn btn-secondary btn-full" onclick="enterDemoMode()" style="margin-top:var(--space-3)">
-                    <i class="fas fa-play-circle" aria-hidden="true"></i><span>Enter Demo Mode (No Login)</span>
-                </button>
-            </form>
-            <div class="demo-credentials"><div class="demo-credentials-title"><i class="fas fa-info-circle" aria-hidden="true"></i>Demo Credentials</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);font-family:var(--font-mono);font-size:var(--text-sm);color:var(--text-secondary)"><div><strong>Admin:</strong> admin / admin123</div><div><strong>Viewer:</strong> viewer / viewer123</div></div></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="helpModal" onclick="hideHelp()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title">Quick Help</h2>
-            </div>
-            <div style="color:var(--text-secondary);line-height:1.8">
-                <p><strong>Keyboard Shortcuts:</strong></p>
-                <ul style="margin-left:var(--space-4);margin-bottom:var(--space-4)">
-                    <li><kbd>M</kbd> - Center on MOB</li>
-                    <li><kbd>S</kbd> - Center on Ship</li>
-                    <li><kbd>T</kbd> - Test Alert</li>
-                    <li><kbd>F</kbd> - Fullscreen Map</li>
-                    <li><kbd>ESC</kbd> - Acknowledge Alert</li>
-                </ul>
-                <p><strong>Demo Credentials:</strong></p>
-                <p>Admin: admin / admin123</p>
-                <p>Viewer: viewer / viewer123</p>
-            </div>
-            <button class="btn btn-primary btn-full" onclick="hideHelp()" style="margin-top:var(--space-4)">Got it</button>
-        </div>
-    </div>
-
-    <footer class="footer" role="contentinfo">
-        <div class="footer-content">
-            <div style="display:flex;align-items:center;gap:var(--space-2)">
-                <i class="fas fa-shield-alt" style="color:var(--accent)" aria-hidden="true"></i>
-                <span>© 2024 MAN OVERBOARD SECURITY SYSTEM</span>
-            </div>
-            <span id="lastSync">Last sync: Never</span>
-            <span>Marine Safety & Tracking Solution</span>
-        </div>
-    </footer>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script>
-// Marseille to Ajaccio (Corsica) realistic ferry route waypoints
-const SEA_ROUTE_WAYPOINTS = [
-    {lat: 43.3114, lng: 5.3665, name: "Marseille Port"}, // Starting point - Marseille
-    {lat: 43.2000, lng: 5.4500, name: "Marseille Bay Exit"},
-    {lat: 43.0000, lng: 5.6000, name: "Offshore Route"},
-    {lat: 42.6000, lng: 6.0000, name: "Mediterranean Lane"},
-    {lat: 42.3000, lng: 6.5000, name: "Corsica Approach"},
-    {lat: 42.0000, lng: 7.0000, name: "West Corsica Coast"},
-    {lat: 41.9209, lng: 8.7427, name: "Ajaccio Port"} // Destination - Ajaccio
-];
-
-// Crew members with assigned devices
-const CREW_MEMBERS = [
-    {id: 'MOB-01', name: 'Captain Jean Dupont', role: 'Ship Master', status: 'safe', avatar: 'JD'},
-    {id: 'MOB-02', name: 'First Mate Marie Laurent', role: 'Navigation Officer', status: 'safe', avatar: 'ML'},
-    {id: 'MOB-03', name: 'Engineer Ahmed Hassan', role: 'Chief Engineer', status: 'safe', avatar: 'AH'},
-    {id: 'MOB-04', name: 'Deckhand Luca Rossi', role: 'Deck Crew', status: 'safe', avatar: 'LR'}
-];
-
-const CONFIG={RSSI_WARNING:-80,RSSI_CRITICAL:-95,SPEED_DROP_THRESHOLD:0.5,MAX_HISTORY_ITEMS:1000,STORAGE_KEY:'mob_guard_data',SESSION_KEY:'mob_guard_session',USERS:{admin:{password:'admin123',role:'admin'},viewer:{password:'viewer123',role:'viewer'}},DEFAULT_SHIP_POSITION:{lat:43.2965,lng:5.3698},MAP_ZOOM:14,TRACK_MAX_POINTS:100,CHART_MAX_POINTS:30,UPDATE_INTERVAL:3000};
-const state={currentUser:null,currentPacket:null,packetHistory:[],alertActive:false,alertAcknowledged:false,map:null,mobMarker:null,shipMarker:null,trackLine:null,trackPoints:[],audioContext:null,audioOscillator:null,updateInterval:null,charts:{rssi:null,speed:null,packet:null},chartData:{rssi:[],speed:[],packetRate:[],labels:[]},replayActive:false,replayIndex:0,replayInterval:null,routeProgress:0,currentWaypoint:0,soundEnabled:true};
-
-document.addEventListener('DOMContentLoaded',initializeApp);
-
-function initializeApp(){
-    const session=getSession();
-    if(session){
-        state.currentUser=session;
-        applyUserRole(session.role);
-        hideLoginModal();
-        loadSampleData();
-    }else{
-        showLoginModal();
-    }
-    initializeMap();
-    initializeCharts();
-    loadHistory();
-    renderCrew();
-    startAutoRefresh();
-    setDefaultFilterDates();
-    document.addEventListener('click',initAudioContext,{once:true});
-    window.addEventListener('scroll',()=>{document.querySelector('.header').classList.toggle('header-scrolled',window.scrollY>10)});
-    setTimeout(()=>{
-        document.getElementById('loadingOverlay').style.opacity='0';
-        setTimeout(()=>document.getElementById('loadingOverlay').remove(),500);
-    },1000);
-    console.log('%c MOB Guard v2.0 ','background:#06b6d4;color:#0f172a;font-size:20px;font-weight:bold;border-radius:8px;padding:8px 16px');
-    console.log('%c Enhanced Marine Security Dashboard ','color:#06b6d4;font-size:14px');
-}
-
-function initializeCharts(){
-    const chartOptions={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false,grid:{display:false}},y:{grid:{color:'rgba(148,163,184,0.1)',drawBorder:false},ticks:{color:'#64748b',font:{size:10,family:'JetBrains Mono'}}}},elements:{point:{radius:0,hoverRadius:4},line:{tension:0.4,borderWidth:2}},interaction:{intersect:false,mode:'index'}};
-    const rssiCtx=document.getElementById('rssiChart').getContext('2d');
-    state.charts.rssi=new Chart(rssiCtx,{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.1)',fill:true}]},options:{...chartOptions,scales:{...chartOptions.scales,y:{...chartOptions.scales.y,suggestedMin:-100,suggestedMax:-60}}}});
-    const speedCtx=document.getElementById('speedChart').getContext('2d');
-    state.charts.speed=new Chart(speedCtx,{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true}]},options:chartOptions});
-    const packetCtx=document.getElementById('packetChart').getContext('2d');
-    state.charts.packet=new Chart(packetCtx,{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(16,185,129,0.6)',borderColor:'#10b981',borderWidth:1,borderRadius:4}]},options:chartOptions});
-}
-
-function updateCharts(packet){
-    const now=new Date();
-    const timeLabel=now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    state.chartData.labels.push(timeLabel);
-    state.chartData.rssi.push(packet.rssi);
-    state.chartData.speed.push(packet.speed);
-    const recentPackets=state.packetHistory.filter(p=>{const packetTime=new Date(p.timestamp);return(now-packetTime)<60000});
-    state.chartData.packetRate.push(recentPackets.length);
-    if(state.chartData.labels.length>CONFIG.CHART_MAX_POINTS){
-        state.chartData.labels.shift();
-        state.chartData.rssi.shift();
-        state.chartData.speed.shift();
-        state.chartData.packetRate.shift();
-    }
-    state.charts.rssi.data.labels=state.chartData.labels;
-    state.charts.rssi.data.datasets[0].data=state.chartData.rssi;
-    state.charts.rssi.update('none');
-    state.charts.speed.data.labels=state.chartData.labels;
-    state.charts.speed.data.datasets[0].data=state.chartData.speed;
-    state.charts.speed.update('none');
-    state.charts.packet.data.labels=state.chartData.labels;
-    state.charts.packet.data.datasets[0].data=state.chartData.packetRate;
-    state.charts.packet.update('none');
-    const rssiAvg=Math.round(state.chartData.rssi.reduce((a,b)=>a+b,0)/state.chartData.rssi.length);
-    const speedAvg=(state.chartData.speed.reduce((a,b)=>a+b,0)/state.chartData.speed.length).toFixed(1);
-    document.getElementById('rssiAvg').textContent=`${rssiAvg} dBm`;
-    document.getElementById('speedAvg').textContent=`${speedAvg} kn`;
-    document.getElementById('packetRate').textContent=`${recentPackets.length} /min`;
-}
-
-function handleLogin(event){
-    event.preventDefault();
-    const username=document.getElementById('loginUsername').value.trim();
-    const password=document.getElementById('loginPassword').value;
-    const user=authenticateUser(username,password);
-    if(user){
-        state.currentUser=user;
-        saveSession(user);
-        applyUserRole(user.role);
-        hideLoginModal();
-        loadSampleData();
-        document.getElementById('loginError').classList.remove('active');
-    }else{
-        document.getElementById('loginError').classList.add('active');
-        document.getElementById('loginUsername').focus();
-    }
-}
-
-function authenticateUser(username,password){
-    const userConfig=CONFIG.USERS[username];
-    if(userConfig&&userConfig.password===password){
-        return{username:username,role:userConfig.role,loginTime:new Date().toISOString()};
-    }
-    return null;
-}
-
-function logout(){
-    clearSession();
-    state.currentUser=null;
-    location.reload();
-}
-
-function saveSession(user){
-    localStorage.setItem(CONFIG.SESSION_KEY,JSON.stringify(user));
-}
-
-function getSession(){
-    const session=localStorage.getItem(CONFIG.SESSION_KEY);
-    return session?JSON.parse(session):null;
-}
-
-function clearSession(){
-    localStorage.removeItem(CONFIG.SESSION_KEY);
-}
-
-function applyUserRole(role){
-    document.body.classList.toggle('is-admin',role==='admin');
-    document.getElementById('userRole').textContent=role;
-    document.getElementById('userRole').className=`role-badge ${role}`;
-    document.getElementById('username').textContent=state.currentUser.username;
-    document.querySelectorAll('.nav-link.admin-only').forEach(el=>{el.style.display=role==='admin'?'flex':'none'});
-    document.querySelectorAll('.admin-only').forEach(el=>{if(!el.classList.contains('nav-link'))el.style.display=role==='admin'?'flex':'none'});
-}
-
-function showLoginModal(){
-    document.getElementById('loginModal').classList.add('active');
-    document.getElementById('loginUsername').focus();
-}
-
-function hideLoginModal(){
-    document.getElementById('loginModal').classList.remove('active');
-}
-
-function enterDemoMode(){
-    state.currentUser={username:'demo',role:'viewer',loginTime:new Date().toISOString()};
-    applyUserRole('viewer');
-    hideLoginModal();
-    loadSampleData();
-}
-
-function loadSampleData(){
-    // Generate sample packets along the realistic sea route
-    const samplePackets=[];
-    for(let i=0;i<5;i++){
-        const progress=i/4;
-        const waypointIndex=Math.floor(progress*(SEA_ROUTE_WAYPOINTS.length-1));
-        const nextWaypointIndex=Math.min(waypointIndex+1,SEA_ROUTE_WAYPOINTS.length-1);
-        const segmentProgress=(progress*(SEA_ROUTE_WAYPOINTS.length-1))-waypointIndex;
-        
-        const current=SEA_ROUTE_WAYPOINTS[waypointIndex];
-        const next=SEA_ROUTE_WAYPOINTS[nextWaypointIndex];
-        
-        const lat=current.lat+(next.lat-current.lat)*segmentProgress;
-        const lng=current.lng+(next.lng-current.lng)*segmentProgress;
-        
-        samplePackets.push({
-            id:'MOB-01',
-            name:'Captain Jean Dupont',
-            latitude:lat,
-            longitude:lng,
-            gpsFix:true,
-            satellites:8,
-            speed:18.5-i*0.5,
-            altitude:0,
-            course:Math.floor(110+i*5),
-            rssi:-65-i*3,
-            date:'2024-01-15',
-            time:`10:0${i}0:00`,
-            timestamp:new Date().toISOString()
-        });
-    }
-    samplePackets.forEach(packet=>receiveLoRaPacket(packet));
-}
-
-function showHelp(){
-    document.getElementById('helpModal').classList.add('active');
-}
-
-function hideHelp(){
-    document.getElementById('helpModal').classList.remove('active');
-}
-
-function toggleNav(){
-    document.querySelector('.nav').classList.toggle('active');
-}
-
-function navigateToSection(sectionId){
-    // Hide all sections
-    document.querySelectorAll('section').forEach(section=>{
-        section.style.display='none';
-    });
-    // Show selected section
-    const targetSection=document.getElementById(sectionId);
-    if(targetSection){
-        targetSection.style.display='block';
-        targetSection.scrollIntoView({behavior:'smooth',block:'start'});
-    }
-    // Update nav active state
-    document.querySelectorAll('.nav-link').forEach(link=>{
-        link.classList.remove('active');
-        link.removeAttribute('aria-current');
-        if(link.getAttribute('data-section')===sectionId){
-            link.classList.add('active');
-            link.setAttribute('aria-current','page');
-        }
-    });
-    document.querySelector('.nav').classList.remove('active');
-}
-
-function renderCrew(){
-    const grid=document.getElementById('crewGrid');
-    if(!grid)return;
-    grid.innerHTML='';
-    CREW_MEMBERS.forEach(member=>{
-        const card=document.createElement('div');
-        card.className='crew-card';
-        card.innerHTML=`
-            <div class="crew-avatar">${member.avatar}</div>
-            <div class="crew-info">
-                <div class="crew-name">${member.name}</div>
-                <div class="crew-role">${member.role}</div>
-            </div>
-            <div class="crew-status ${member.status}" id="status-${member.id}"></div>
-        `;
-        grid.appendChild(card);
-    });
-}
-
-function receiveLoRaPacket(packet){
-    const normalizedPacket=normalizePacket(packet);
-    storePacket(normalizedPacket);
-    updateDashboard(normalizedPacket);
-    updateMap(normalizedPacket);
-    updateCharts(normalizedPacket);
-    checkAlertConditions(normalizedPacket);
-    addHistoryRow(normalizedPacket);
-    return normalizedPacket;
-}
-
-function normalizePacket(packet){
-    const now=new Date();
-    const crew=CREW_MEMBERS.find(c=>c.id===packet.id)||CREW_MEMBERS[0];
-    return{
-        id:packet.id||'UNKNOWN',
-        name:packet.name||crew.name,
-        latitude:parseFloat(packet.latitude)||0,
-        longitude:parseFloat(packet.longitude)||0,
-        gpsFix:packet.gpsFix!==undefined?packet.gpsFix:true,
-        satellites:parseInt(packet.satellites)||0,
-        speed:parseFloat(packet.speed)||0,
-        altitude:parseFloat(packet.altitude)||0,
-        course:parseInt(packet.course)||0,
-        rssi:parseInt(packet.rssi)||-100,
-        date:packet.date||now.toISOString().split('T')[0],
-        time:packet.time||now.toTimeString().split(' ')[0],
-        timestamp:now.toISOString(),
-        status:'safe'
-    };
-}
-
-function storePacket(packet){
-    let data=getStoredData();
-    data.packets.unshift(packet);
-    if(data.packets.length>CONFIG.MAX_HISTORY_ITEMS){
-        data.packets=data.packets.slice(0,CONFIG.MAX_HISTORY_ITEMS);
-    }
-    localStorage.setItem(CONFIG.STORAGE_KEY,JSON.stringify(data));
-    state.packetHistory=data.packets;
-    state.currentPacket=packet;
-}
-
-function getStoredData(){
-    const stored=localStorage.getItem(CONFIG.STORAGE_KEY);
-    if(stored){
-        return JSON.parse(stored);
-    }
-    return{packets:[]};
-}
-
-function loadHistory(){
-    const data=getStoredData();
-    state.packetHistory=data.packets;
-    const tbody=document.getElementById('historyBody');
-    tbody.innerHTML='';
-    data.packets.slice(0,50).forEach(packet=>{
-        addHistoryRow(packet,false);
-    });
-    if(data.packets.length>0){
-        const lastPacket=data.packets[0];
-        updateLastSync(lastPacket.timestamp);
-        const recentPackets=data.packets.slice(0,CONFIG.CHART_MAX_POINTS).reverse();
-        recentPackets.forEach(packet=>{
-            state.chartData.labels.push(packet.time);
-            state.chartData.rssi.push(packet.rssi);
-            state.chartData.speed.push(packet.speed);
-            state.chartData.packetRate.push(1);
-        });
-    }
-}
-
-function clearLogs(){
-    if(confirm('Are you sure you want to clear all logs? This action cannot be undone.')){
-        localStorage.removeItem(CONFIG.STORAGE_KEY);
-        state.packetHistory=[];
-        document.getElementById('historyBody').innerHTML='';
-        state.chartData={rssi:[],speed:[],packetRate:[],labels:[]};
-        Object.values(state.charts).forEach(chart=>{
-            chart.data.labels=[];
-            chart.data.datasets[0].data=[];
-            chart.update();
-        });
-    }
-}
-
-function updateDashboard(packet){
-    const coordsEl=document.getElementById('gpsCoords');
-    coordsEl.textContent=`${packet.latitude.toFixed(5)}, ${packet.longitude.toFixed(5)}`;
-    flashUpdate(coordsEl);
-    document.getElementById('satelliteCount').textContent=packet.satellites;
-    const fixEl=document.getElementById('gpsFix');
-    fixEl.textContent=packet.gpsFix?'OK':'LOST';
-    fixEl.style.color=packet.gpsFix?'var(--status-safe)':'var(--status-alert)';
-    const speedEl=document.getElementById('speed');
-    speedEl.textContent=packet.speed.toFixed(1);
-    flashUpdate(speedEl);
-    document.getElementById('course').textContent=packet.course;
-    const speedStatusEl=document.getElementById('speedStatus');
-    if(packet.speed<0.5){
-        speedStatusEl.textContent='Stationary';
-    }else if(packet.speed<10){
-        speedStatusEl.textContent='Slow';
-    }else if(packet.speed<20){
-        speedStatusEl.textContent='Cruising';
-    }else{
-        speedStatusEl.textContent='Fast';
-    }
-    updateRSSI(packet.rssi);
-    document.getElementById('deviceId').textContent=packet.id;
-    document.getElementById('altitude').textContent=packet.altitude.toFixed(1);
-    document.getElementById('lastSeen').textContent=packet.time;
-    updateStatusBanner(packet);
-    updateLastSync(packet.timestamp);
-}
-
-function updateRSSI(rssi){
-    const rssiEl=document.getElementById('rssiValue');
-    const bars=document.querySelectorAll('.signal-bar');
-    const icon=document.getElementById('rssiIcon');
-    rssiEl.textContent=`${rssi} dBm`;
-    flashUpdate(rssiEl);
-    let quality=0;
-    let colorClass='critical';
-    if(rssi>-70){quality=5;colorClass='';rssiEl.style.color='var(--status-safe)';icon.className='card-icon teal';}
-    else if(rssi>-80){quality=4;colorClass='';rssiEl.style.color='var(--status-safe)';icon.className='card-icon teal';}
-    else if(rssi>-90){quality=3;colorClass='warning';rssiEl.style.color='var(--status-warning)';icon.className='card-icon amber';}
-    else if(rssi>-100){quality=2;colorClass='critical';rssiEl.style.color='var(--status-alert)';icon.className='card-icon red';}
-    else{quality=1;colorClass='critical';rssiEl.style.color='var(--status-alert)';icon.className='card-icon red';}
-    bars.forEach((bar,index)=>{bar.className=`signal-bar ${index<quality?'active':''} ${colorClass}`;});
-}
-
-function updateStatusBanner(packet){
-    const banner=document.getElementById('statusBanner');
-    const statusText=document.getElementById('statusText');
-    const statusIcon=banner.querySelector('.status-icon-wrapper i');
-    let status='safe';
-    if(!packet.gpsFix){status='alert';}
-    else if(packet.rssi<CONFIG.RSSI_CRITICAL){status='alert';}
-    else if(packet.rssi<CONFIG.RSSI_WARNING){status='warning';}
-    banner.className=`status-banner ${status}`;
-    if(status==='safe'){
-        statusText.textContent='System Normal';
-        statusIcon.className='fas fa-check-circle';
-    }else if(status==='warning'){
-        statusText.textContent='Warning';
-        statusIcon.className='fas fa-exclamation-triangle';
-    }else{
-        statusText.textContent='MAN OVERBOARD';
-        statusIcon.className='fas fa-life-ring';
-    }
-    document.getElementById('statusTime').textContent=`Last update: ${packet.time}`;
-}
-
-function flashUpdate(element){
-    element.classList.add('update-flash');
-    setTimeout(()=>element.classList.remove('update-flash'),400);
-}
-
-function updateLastSync(timestamp){
-    const date=new Date(timestamp);
-    document.getElementById('lastSync').textContent=`Last sync: ${date.toLocaleTimeString()}`;
-}
-
-function initializeMap(){
-    state.map=L.map('map').setView([CONFIG.DEFAULT_SHIP_POSITION.lat,CONFIG.DEFAULT_SHIP_POSITION.lng],CONFIG.MAP_ZOOM);
-    
-    // Add base map layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        attribution:'© OpenStreetMap contributors',
-        maxZoom:19
-    }).addTo(state.map);
-    
-    // Add nautical/seamark layer
-    L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',{
-        attribution:'© OpenSeaMap contributors',
-        maxZoom:19,
-        opacity:0.7
-    }).addTo(state.map);
-    
-    // Draw the sea route line
-    const routeLine=L.polyline(SEA_ROUTE_WAYPOINTS.map(wp=>[wp.lat,wp.lng]),{
-        color:'#06b6d4',
-        weight:3,
-        opacity:0.6,
-        dashArray:'10, 10'
-    }).addTo(state.map);
-    
-    const mobIcon=L.divIcon({
-        className:'custom-div-icon',
-        html:'<div class="mob-marker"><i class="fas fa-user"></i></div>',
-        iconSize:[36,36],
-        iconAnchor:[18,18]
-    });
-    
-    const shipIcon=L.divIcon({
-        className:'custom-div-icon',
-        html:'<div class="ship-marker"><i class="fas fa-ship"></i></div>',
-        iconSize:[28,28],
-        iconAnchor:[14,14]
-    });
-    
-    state.mobMarker=L.marker([CONFIG.DEFAULT_SHIP_POSITION.lat,CONFIG.DEFAULT_SHIP_POSITION.lng],{icon:mobIcon}).addTo(state.map);
-    state.mobMarker.bindPopup('<b>MOB Position</b><br>Last known location');
-    
-    state.shipMarker=L.marker([CONFIG.DEFAULT_SHIP_POSITION.lat+0.002,CONFIG.DEFAULT_SHIP_POSITION.lng+0.002],{icon:shipIcon}).addTo(state.map);
-    state.shipMarker.bindPopup('<b>Ship Position</b><br>Current location');
-    
-    state.trackLine=L.polyline([],{
-        color:'#ef4444',
-        weight:4,
-        opacity:0.9
-    }).addTo(state.map);
-}
-
-function updateMap(packet){
-    if(!state.map)return;
-    const position=[packet.latitude,packet.longitude];
-    state.mobMarker.setLatLng(position);
-    const crew=CREW_MEMBERS.find(c=>c.id===packet.id)||CREW_MEMBERS[0];
-    state.mobMarker.setPopupContent(`<b>${crew.name}</b><br>Device: ${packet.id}<br>Speed: ${packet.speed.toFixed(1)} kn<br>Course: ${packet.course}°<br>RSSI: ${packet.rssi} dBm<br>Time: ${packet.time}`);
-    state.trackPoints.push(position);
-    if(state.trackPoints.length>CONFIG.TRACK_MAX_POINTS){
-        state.trackPoints.shift();
-    }
-    state.trackLine.setLatLngs(state.trackPoints);
-}
-
-function centerOnMOB(){
-    if(state.currentPacket&&state.map){
-        state.map.flyTo([state.currentPacket.latitude,state.currentPacket.longitude],16,{duration:1});
-    }
-}
-
-function centerOnShip(){
-    if(state.map){
-        state.map.flyTo([CONFIG.DEFAULT_SHIP_POSITION.lat,CONFIG.DEFAULT_SHIP_POSITION.lng],14,{duration:1});
-    }
-}
-
-function toggleFullscreen(){
-    const container=document.querySelector('.map-container');
-    if(!document.fullscreenElement){
-        container.requestFullscreen().catch(err=>console.log('Fullscreen error:',err));
-    }else{
-        document.exitFullscreen();
-    }
-}
-
-function clearTrack(){
-    state.trackPoints=[];
-    state.trackLine.setLatLngs([]);
-}
-
-function toggleReplay(){
-    if(state.replayActive){
-        pauseReplay();
-    }else{
-        startReplay();
-    }
-}
-
-function startReplay(){
-    if(state.packetHistory.length<2)return;
-    state.replayActive=true;
-    document.getElementById('replayBtn').innerHTML='<i class="fas fa-pause"></i>';
-    state.replayInterval=setInterval(()=>{
-        if(state.replayIndex>=state.packetHistory.length-1){
-            pauseReplay();
-            state.replayIndex=0;
-            return;
-        }
-        const packet=state.packetHistory[state.packetHistory.length-1-state.replayIndex];
-        updateMap(packet);
-        state.replayIndex++;
-        updateReplayProgress();
-    },500);
-}
-
-function pauseReplay(){
-    state.replayActive=false;
-    document.getElementById('replayBtn').innerHTML='<i class="fas fa-play"></i>';
-    clearInterval(state.replayInterval);
-}
-
-function updateReplayProgress(){
-    const progress=(state.replayIndex/(state.packetHistory.length-1))*100;
-    document.getElementById('replayProgress').style.width=`${progress}%`;
-    const total=state.packetHistory.length;
-    document.getElementById('replayTime').textContent=`${String(state.replayIndex).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
-}
-
-function seekReplay(event){
-    const rect=event.currentTarget.getBoundingClientRect();
-    const percent=(event.clientX-rect.left)/rect.width;
-    state.replayIndex=Math.floor(percent*(state.packetHistory.length-1));
-    updateReplayProgress();
-    const packet=state.packetHistory[state.packetHistory.length-1-state.replayIndex];
-    if(packet)updateMap(packet);
-}
-
-function checkAlertConditions(packet){
-    let alertTriggered=false;
-    let alertReason='';
-    if(!packet.gpsFix){alertTriggered=true;alertReason='GPS fix lost';}
-    else if(packet.rssi<CONFIG.RSSI_CRITICAL){alertTriggered=true;alertReason='Signal strength critical';}
-    else if(state.currentPacket&&state.currentPacket.speed>3&&packet.speed<CONFIG.SPEED_DROP_THRESHOLD){alertTriggered=true;alertReason='Sudden speed drop detected';}
-    if(alertTriggered&&!state.alertActive){
-        triggerAlert(alertReason,packet);
-    }
-}
-
-function triggerAlert(reason,packet){
-    state.alertActive=true;
-    state.alertAcknowledged=false;
-    const panel=document.getElementById('alertPanel');
-    panel.classList.add('active');
-    panel.classList.remove('silenced');
-    document.getElementById('alertMessage').textContent=`${reason}. Check map for position.`;
-    document.getElementById('alertTime').textContent=new Date().toLocaleTimeString();
-    document.getElementById('alertCrew').textContent=packet.name||packet.id;
-    document.getElementById('alertPosition').textContent=`${packet.latitude.toFixed(5)}, ${packet.longitude.toFixed(5)}`;
-    document.getElementById('alertSignal').textContent=`${packet.rssi} dBm`;
-    
-    // Update crew status
-    const crewMember=CREW_MEMBERS.find(c=>c.id===packet.id);
-    if(crewMember){
-        crewMember.status='alert';
-        const statusEl=document.getElementById(`status-${packet.id}`);
-        if(statusEl)statusEl.className='crew-status alert';
-    }
-    
-    if(state.soundEnabled)playAlarmSound();
-    centerOnMOB();
-    const banner=document.getElementById('statusBanner');
-    banner.className='status-banner alert';
-    document.getElementById('statusText').textContent='MAN OVERBOARD';
-}
-
-function acknowledgeAlert(){
-    state.alertAcknowledged=true;
-    stopAlarmSound();
-    const panel=document.getElementById('alertPanel');
-    panel.classList.add('silenced');
-    setTimeout(()=>{
-        panel.classList.remove('active');
-        state.alertActive=false;
-    },3000);
-    if(state.currentPacket&&state.currentPacket.gpsFix&&state.currentPacket.rssi>CONFIG.RSSI_WARNING){
-        const banner=document.getElementById('statusBanner');
-        banner.className='status-banner safe';
-        document.getElementById('statusText').textContent='System Normal';
-    }
-    // Reset crew status
-    CREW_MEMBERS.forEach(member=>{
-        member.status='safe';
-        const statusEl=document.getElementById(`status-${member.id}`);
-        if(statusEl)statusEl.className='crew-status';
-    });
-}
-
-function simulateMOB(){
-    const randomCrew=CREW_MEMBERS[Math.floor(Math.random()*CREW_MEMBERS.length)];
-    const testPacket={
-        id:randomCrew.id,
-        name:randomCrew.name,
-        latitude:CONFIG.DEFAULT_SHIP_POSITION.lat+(Math.random()-0.5)*0.01,
-        longitude:CONFIG.DEFAULT_SHIP_POSITION.lng+(Math.random()-0.5)*0.01,
-        gpsFix:true,
-        satellites:8,
-        speed:0.2,
-        altitude:0,
-        course:Math.floor(Math.random()*360),
-        rssi:-85,
-        date:new Date().toISOString().split('T')[0],
-        time:new Date().toTimeString().split(' ')[0]
-    };
-    receiveLoRaPacket(testPacket);
-    triggerAlert('Manual test alert triggered',testPacket);
-}
-
-function initAudioContext(){
-    if(!state.audioContext){
-        state.audioContext=new(window.AudioContext||window.webkitAudioContext)();
-    }
-}
-
-function playAlarmSound(){
-    if(!state.audioContext||!state.soundEnabled)return;
-    const oscillator=state.audioContext.createOscillator();
-    const gainNode=state.audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(state.audioContext.destination);
-    oscillator.type='square';
-    oscillator.frequency.setValueAtTime(880,state.audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(440,state.audioContext.currentTime+0.2);
-    oscillator.frequency.setValueAtTime(880,state.audioContext.currentTime+0.4);
-    oscillator.frequency.setValueAtTime(440,state.audioContext.currentTime+0.6);
-    gainNode.gain.setValueAtTime(0.3,state.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01,state.audioContext.currentTime+0.8);
-    oscillator.start(state.audioContext.currentTime);
-    oscillator.stop(state.audioContext.currentTime+0.8);
-    state.audioOscillator=oscillator;
-    if(state.alertActive&&!state.alertAcknowledged){
-        setTimeout(()=>playAlarmSound(),1000);
-    }
-}
-
-function stopAlarmSound(){
-    if(state.audioOscillator){
-        try{state.audioOscillator.stop();}catch(e){}
-        state.audioOscillator=null;
-    }
-}
-
-function addHistoryRow(packet,prepend=true){
-    const tbody=document.getElementById('historyBody');
-    const row=document.createElement('tr');
-    let statusClass='safe';
-    let statusText='Safe';
-    if(!packet.gpsFix||packet.rssi<CONFIG.RSSI_CRITICAL){
-        statusClass='alert';
-        statusText='Alert';
-    }else if(packet.rssi<CONFIG.RSSI_WARNING){
-        statusClass='warning';
-        statusText='Warning';
-    }
-    let rssiClass='rssi-good';
-    if(packet.rssi<-95)rssiClass='rssi-critical';
-    else if(packet.rssi<-80)rssiClass='rssi-warning';
-    row.innerHTML=`<td>${packet.date} ${packet.time}</td><td>${packet.name||'Unknown'}</td><td>${packet.id}</td><td>${packet.latitude.toFixed(5)}</td><td>${packet.longitude.toFixed(5)}</td><td>${packet.speed.toFixed(1)} kn</td><td class="${rssiClass}">${packet.rssi} dBm</td><td><span class="status-badge ${statusClass}">${statusText}</span></td>`;
-    if(prepend&&tbody.firstChild){
-        tbody.insertBefore(row,tbody.firstChild);
-    }else{
-        tbody.appendChild(row);
-    }
-    while(tbody.children.length>50){
-        tbody.removeChild(tbody.lastChild);
-    }
-}
-
-function setDefaultFilterDates(){
-    const today=new Date().toISOString().split('T')[0];
-    const lastWeek=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-    document.getElementById('filterFrom').value=lastWeek;
-    document.getElementById('filterTo').value=today;
-}
-
-function applyFilters(){
-    const fromDate=document.getElementById('filterFrom').value;
-    const toDate=document.getElementById('filterTo').value;
-    const statusFilter=document.getElementById('filterStatus').value;
-    const tbody=document.getElementById('historyBody');
-    tbody.innerHTML='';
-    const filtered=state.packetHistory.filter(packet=>{
-        const dateMatch=packet.date>=fromDate&&packet.date<=toDate;
-        let statusMatch=true;
-        if(statusFilter!=='all'){
-            if(statusFilter==='safe'){
-                statusMatch=packet.gpsFix&&packet.rssi>=CONFIG.RSSI_WARNING;
-            }else if(statusFilter==='warning'){
-                statusMatch=packet.gpsFix&&packet.rssi>=CONFIG.RSSI_CRITICAL&&packet.rssi<CONFIG.RSSI_WARNING;
-            }else if(statusFilter==='alert'){
-                statusMatch=!packet.gpsFix||packet.rssi<CONFIG.RSSI_CRITICAL;
-            }
-        }
-        return dateMatch&&statusMatch;
-    });
-    filtered.forEach(packet=>addHistoryRow(packet,false));
-}
-
-function exportLogs(){
-    const headers=['Timestamp','Date','Time','Crew Member','Device ID','Latitude','Longitude','GPS Fix','Satellites','Speed (kn)','Altitude (m)','Course (°)','RSSI (dBm)','Status'];
-    const rows=state.packetHistory.map(packet=>[packet.timestamp,packet.date,packet.time,packet.name||'Unknown',packet.id,packet.latitude,packet.longitude,packet.gpsFix?'Yes':'No',packet.satellites,packet.speed,packet.altitude,packet.course,packet.rssi,packet.status]);
-    const metadata=[`MOB Guard Security System - Export Log`,`Generated: ${new Date().toLocaleString()}`,`System Version: v2.0.0`,`Exported By: ${state.currentUser ? state.currentUser.username : 'Unknown'}`,`Total Records: ${rows.length}`,`---`];
-    const csv=[...metadata,headers.join(','),...rows.map(r=>r.join(','))].join('\n');
-    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`mob_guard_logs_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function startAutoRefresh(){
-    state.updateInterval=setInterval(()=>{
-        simulateIncomingPacket();
-    },CONFIG.UPDATE_INTERVAL);
-}
-
-function simulateIncomingPacket(){
-    // Move along the realistic sea route
-    state.routeProgress+=0.005;
-    if(state.routeProgress>1)state.routeProgress=0;
-    
-    const waypointIndex=Math.floor(state.routeProgress*(SEA_ROUTE_WAYPOINTS.length-1));
-    const nextWaypointIndex=Math.min(waypointIndex+1,SEA_ROUTE_WAYPOINTS.length-1);
-    const segmentProgress=(state.routeProgress*(SEA_ROUTE_WAYPOINTS.length-1))-waypointIndex;
-    
-    const current=SEA_ROUTE_WAYPOINTS[waypointIndex];
-    const next=SEA_ROUTE_WAYPOINTS[nextWaypointIndex];
-    
-    const lat=current.lat+(next.lat-current.lat)*segmentProgress+(Math.random()-0.5)*0.001;
-    const lng=current.lng+(next.lng-current.lng)*segmentProgress+(Math.random()-0.5)*0.001;
-    
-    // Calculate realistic course based on direction
-    const course=Math.floor(Math.atan2(next.lng-current.lng,next.lat-current.lat)*180/Math.PI);
-    
-    const now=new Date();
-    const packet={
-        id:'MOB-01',
-        name:'Captain Jean Dupont',
-        latitude:lat,
-        longitude:lng,
-        gpsFix:true,
-        satellites:6+Math.floor(Math.random()*6),
-        speed:16+Math.random()*4, // Realistic ferry speed 16-20 knots
-        altitude:0,
-        course:course,
-        rssi:-70-Math.floor(Math.random()*25),
-        date:now.toISOString().split('T')[0],
-        time:now.toTimeString().split(' ')[0]
-    };
-    receiveLoRaPacket(packet);
-}
-
-// Settings functions
-function changeMapTheme(){
-    const theme=document.getElementById('mapTheme').value;
-    // Implementation would change map tiles based on selection
-    console.log('Map theme changed to:',theme);
-}
-
-function changeRefreshRate(){
-    const rate=parseInt(document.getElementById('refreshRate').value);
-    clearInterval(state.updateInterval);
-    CONFIG.UPDATE_INTERVAL=rate;
-    startAutoRefresh();
-}
-
-function changeDataRetention(){
-    const days=parseInt(document.getElementById('dataRetention').value);
-    console.log('Data retention set to:',days,'days');
-}
-
-function toggleSoundAlerts(){
-    state.soundEnabled=document.getElementById('soundAlerts').checked;
-}
-
-function togglePushNotifications(){
-    const enabled=document.getElementById('pushNotifications').checked;
-    if(enabled&&'Notification'in window){
-        Notification.requestPermission();
-    }
-}
-
-function addCrewMember(){
-    const name=prompt('Enter crew member name:');
-    if(name){
-        const role=prompt('Enter role:')||'Crew Member';
-        const id=`MOB-${String(CREW_MEMBERS.length+1).padStart(2,'0')}`;
-        const initials=name.split(' ').map(n=>n[0]).join('').toUpperCase();
-        CREW_MEMBERS.push({id,name,role,status:'safe',avatar:initials});
-        renderCrew();
-    }
-}
-
-document.addEventListener('keydown',(e)=>{
-    if(!state.currentUser)return;
-    switch(e.key){
-        case'm':centerOnMOB();break;
-        case's':centerOnShip();break;
-        case't':simulateMOB();break;
-        case'f':toggleFullscreen();break;
-        case'Escape':if(state.alertActive)acknowledgeAlert();break;
-    }
-});
-
-window.receiveLoRaPacket=receiveLoRaPacket;
-window.simulateMOB=simulateMOB;
-window.toggleNav=toggleNav;
-window.navigateToSection=navigateToSection;
-window.showHelp=showHelp;
-window.hideHelp=hideHelp;
-window.centerOnMOB=centerOnMOB;
-window.centerOnShip=centerOnShip;
-window.toggleFullscreen=toggleFullscreen;
-window.clearTrack=clearTrack;
-window.toggleReplay=toggleReplay;
-window.seekReplay=seekReplay;
-window.acknowledgeAlert=acknowledgeAlert;
-window.applyFilters=applyFilters;
-window.exportLogs=exportLogs;
-window.clearLogs=clearLogs;
-window.changeMapTheme=changeMapTheme;
-window.changeRefreshRate=changeRefreshRate;
-window.changeDataRetention=changeDataRetention;
-window.toggleSoundAlerts=toggleSoundAlerts;
-window.togglePushNotifications=togglePushNotifications;
-window.addCrewMember=addCrewMember;
-
-console.log('\n%c📡 MOB Guard API Ready','color:#06b6d4;font-size:14px;font-weight:bold');
-console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color:#94a3b8');
-    </script>
-</body>
-</html>
+            padding: 0;
             box-sizing: border-box;
         }
 
@@ -1666,10 +295,14 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
             padding: 15px 20px;
             z-index: 999;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: space-between;
             animation: slideDown 0.5s ease;
+        }
+
+        .emergency-banner.active {
+            display: flex;
         }
 
         @keyframes slideDown {
@@ -2287,7 +920,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             color: white;
         }
 
-        /* Map Container */
+        /* Map Container - COLORFUL STYLES */
         .map-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -2300,35 +933,76 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         #map {
             height: 100%;
             width: 100%;
-            background: #1a1f2e;
+            background: #e5e7eb; /* Light gray while loading */
+        }
+
+        /* Map Switcher Control */
+        .map-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .map-btn {
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .map-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #2563eb;
         }
 
         .map-filters {
             position: absolute;
             top: 15px;
             left: 15px;
-            right: 15px;
             display: flex;
             gap: 10px;
             z-index: 400;
         }
 
         .filter-dropdown {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e5e7eb;
             border-radius: 10px;
             padding: 10px 15px;
-            color: var(--text-primary);
+            color: #374151;
             font-size: 13px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .map-stats {
             position: absolute;
-            top: 60px;
+            top: 65px;
             left: 15px;
             display: flex;
             gap: 8px;
@@ -2340,27 +1014,48 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .map-stat.safe {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
         }
 
         .map-stat.warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.9);
+            color: white;
         }
 
         .map-stat.alert {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
         }
 
         .map-stat.mob {
-            background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
+            background: linear-gradient(90deg, #dc2626, #f97316);
             color: white;
+            animation: pulse 2s infinite;
+        }
+
+        /* Leaflet Popup Customization for colorful map */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1f2937;
+        }
+
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #6b7280;
+            padding: 8px 8px 0 0;
         }
 
         /* Device Cards */
@@ -3010,7 +1705,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                 </div>
                 <div class="emergency-text">
                     <h3>MAN OVERBOARD</h3>
-                    <p>Device MOB-002 at 25.7592, -80.1934</p>
+                    <p id="emergencyDetails">Device MOB-002 at 25.7592, -80.1934</p>
                 </div>
             </div>
             <div style="display: flex; align-items: center;">
@@ -3083,6 +1778,11 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                         <i class="fas fa-broadcast-tower"></i>
                         <span>Devices</span>
                     </div>
+                    <!-- NEW: Realistic Simulation Link -->
+                    <div class="nav-item" onclick="window.location.href='simulation.html'">
+                        <i class="fas fa-wave-square"></i>
+                        <span>Realistic Sim</span>
+                    </div>
                 </div>
                 
                 <div class="nav-section">
@@ -3122,7 +1822,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>4</h3>
+                            <h3 id="statTotalDevices">4</h3>
                             <p>Total Devices<br><span style="color: var(--accent-green);">3 online</span></p>
                         </div>
                         <div class="stat-icon blue">
@@ -3132,8 +1832,8 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                     
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-red);">3</h3>
-                            <p>Active Alerts<br><span style="color: var(--accent-red);">1 critical</span></p>
+                            <h3 style="color: var(--accent-red);" id="statActiveAlerts">0</h3>
+                            <p>Active Alerts<br><span style="color: var(--accent-red);">0 critical</span></p>
                         </div>
                         <div class="stat-icon red">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -3142,7 +1842,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                     
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>15,243</h3>
+                            <h3 id="statTotalRecords">15,243</h3>
                             <p>Total Records<br>Telemetry entries</p>
                         </div>
                         <div class="stat-icon gray">
@@ -3152,7 +1852,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                     
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>4</h3>
+                            <h3 id="statCrewMembers">4</h3>
                             <p>Crew Members<br>Assigned devices</p>
                         </div>
                         <div class="stat-icon cyan">
@@ -3191,22 +1891,36 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             <!-- Live Map Page -->
             <div class="page-section" id="livemapPage">
                 <div class="map-container">
+                    <!-- Map Switcher Controls -->
+                    <div class="map-controls">
+                        <button class="map-btn active" onclick="switchMapLayer('satellite')" id="btn-satellite">
+                            <i class="fas fa-satellite"></i> Satellite
+                        </button>
+                        <button class="map-btn" onclick="switchMapLayer('standard')" id="btn-standard">
+                            <i class="fas fa-map"></i> Standard
+                        </button>
+                        <button class="map-btn" onclick="switchMapLayer('dark')" id="btn-dark">
+                            <i class="fas fa-moon"></i> Dark
+                        </button>
+                    </div>
+                    
                     <div class="map-filters">
-                        <div class="filter-dropdown">
+                        <div class="filter-dropdown" onclick="toggleDeviceFilter()">
                             <i class="fas fa-filter"></i>
-                            <span>All Devices</span>
+                            <span id="deviceFilterLabel">All Devices</span>
                             <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
                         </div>
-                        <div class="filter-dropdown" style="margin-left: auto;">
-                            <i class="fas fa-layer-group"></i>
+                        <div class="filter-dropdown" style="margin-left: auto;" onclick="refreshMap()">
+                            <i class="fas fa-sync-alt"></i>
                         </div>
                     </div>
+                    
                     <div class="map-stats">
-                        <span class="map-stat safe">Safe: 47</span>
-                        <span class="map-stat warning">Warning: 0</span>
-                        <span class="map-stat alert">Alert: 2</span>
-                        <span class="map-stat mob">MAN OVERBOARD: 1</span>
+                        <span class="map-stat safe" id="mapStatSafe">Safe: 4</span>
+                        <span class="map-stat alert" id="mapStatAlert" style="display: none;">Alert: 0</span>
+                        <span class="map-stat mob" id="mapStatMOB" style="display: none;">MAN OVERBOARD: 0</span>
                     </div>
+                    
                     <div id="map"></div>
                 </div>
 
@@ -3224,22 +1938,18 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                 <div class="filters-panel">
                     <h3><i class="fas fa-filter"></i> Filters</h3>
                     <div class="filter-row">
-                        <input type="text" class="filter-input" placeholder="Search records...">
-                        <select class="filter-input">
-                            <option>All Devices</option>
-                            <option>MOB-001</option>
-                            <option>MOB-002</option>
-                            <option>MOB-003</option>
-                            <option>MOB-004</option>
+                        <input type="text" class="filter-input" placeholder="Search records..." id="historySearch">
+                        <select class="filter-input" id="historyDeviceFilter">
+                            <option value="all">All Devices</option>
                         </select>
-                        <select class="filter-input">
-                            <option>All Statuses</option>
-                            <option>Safe</option>
-                            <option>Alert</option>
-                            <option>Critical</option>
+                        <select class="filter-input" id="historyStatusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="safe">Safe</option>
+                            <option value="alert">Alert</option>
+                            <option value="critical">Critical</option>
                         </select>
                     </div>
-                    <button class="export-btn" style="margin-top: 10px;">
+                    <button class="export-btn" style="margin-top: 10px;" onclick="exportHistory()">
                         <i class="fas fa-download"></i>
                         Export CSV
                     </button>
@@ -3265,31 +1975,31 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                 <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>3</h3>
+                            <h3 id="alertsTotal">0</h3>
                             <p>Total</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: #f59e0b;">3</h3>
+                            <h3 style="color: #f59e0b;" id="alertsActive">0</h3>
                             <p>Active</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-green);">0</h3>
+                            <h3 style="color: var(--accent-green);" id="alertsResolved">0</h3>
                             <p>Resolved</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-red);">1</h3>
+                            <h3 style="color: var(--accent-red);" id="alertsCritical">0</h3>
                             <p>Critical</p>
                         </div>
                     </div>
                 </div>
 
-                <button class="export-btn" style="margin-bottom: 20px;">
+                <button class="export-btn" style="margin-bottom: 20px;" onclick="resolveAllAlerts()">
                     <i class="fas fa-check-double"></i>
                     Resolve All
                 </button>
@@ -3297,16 +2007,16 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                 <div class="filters-panel" style="margin-bottom: 20px;">
                     <h3><i class="fas fa-filter"></i> Filters</h3>
                     <div class="filter-row">
-                        <select class="filter-input">
-                            <option>All Severities</option>
-                            <option>Critical</option>
-                            <option>High</option>
-                            <option>Medium</option>
+                        <select class="filter-input" id="alertSeverityFilter">
+                            <option value="all">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
                         </select>
-                        <select class="filter-input">
-                            <option>Active Only</option>
-                            <option>Resolved</option>
-                            <option>All</option>
+                        <select class="filter-input" id="alertStatusFilter">
+                            <option value="active">Active Only</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="all">All</option>
                         </select>
                     </div>
                 </div>
@@ -3318,32 +2028,32 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
 
             <!-- Devices Page -->
             <div class="page-section" id="devicesPage">
-                <button class="btn-primary" style="margin-bottom: 20px;">
+                <button class="btn-primary" style="margin-bottom: 20px;" onclick="addDevice()">
                     <i class="fas fa-plus"></i> Add Device
                 </button>
 
                 <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>4</h3>
+                            <h3 id="devicesTotal">4</h3>
                             <p>Total Devices</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-green);">3</h3>
+                            <h3 style="color: var(--accent-green);" id="devicesOnline">4</h3>
                             <p>Online</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-cyan);">4</h3>
+                            <h3 style="color: var(--accent-cyan);" id="devicesActive">4</h3>
                             <p>Active</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: #6b7280;">1</h3>
+                            <h3 style="color: #6b7280;" id="devicesOffline">0</h3>
                             <p>Offline</p>
                         </div>
                     </div>
@@ -3356,26 +2066,26 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
 
             <!-- Users Page -->
             <div class="page-section" id="usersPage">
-                <button class="btn-primary" style="margin-bottom: 20px;">
+                <button class="btn-primary" style="margin-bottom: 20px;" onclick="addUser()">
                     <i class="fas fa-plus"></i> Add User
                 </button>
 
                 <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3>2</h3>
+                            <h3 id="usersTotal">2</h3>
                             <p>Total Users</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: var(--accent-cyan);">1</h3>
+                            <h3 style="color: var(--accent-cyan);" id="usersAdmin">1</h3>
                             <p>Admins</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-info">
-                            <h3 style="color: #6b7280;">1</h3>
+                            <h3 style="color: #6b7280;" id="usersViewer">1</h3>
                             <p>Viewers</p>
                         </div>
                     </div>
@@ -3434,20 +2144,20 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                         </div>
                         
                         <div class="form-group">
-                            <label>Map Theme</label>
+                            <label>Default Map Theme</label>
                             <div class="custom-select" onclick="this.classList.toggle('active')">
-                                <input type="text" class="filter-input" value="Dark (Marine)" readonly style="cursor: pointer;">
+                                <input type="text" class="filter-input" value="Satellite (Realistic)" readonly style="cursor: pointer;">
                                 <div class="select-options">
-                                    <div class="select-option selected" onclick="selectOption(this, 'Dark (Marine)')">Dark (Marine)</div>
-                                    <div class="select-option" onclick="selectOption(this, 'Satellite')">Satellite</div>
-                                    <div class="select-option" onclick="selectOption(this, 'Nautical Charts')">Nautical Charts</div>
+                                    <div class="select-option" onclick="selectOption(this, 'Satellite (Realistic)')">Satellite (Realistic)</div>
+                                    <div class="select-option selected" onclick="selectOption(this, 'Standard (Colorful)')">Standard (Colorful)</div>
+                                    <div class="select-option" onclick="selectOption(this, 'Dark (Marine)')">Dark (Marine)</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label>Auto Refresh (seconds)</label>
-                            <input type="number" value="10" min="5" max="60">
+                            <input type="number" value="10" min="5" max="60" id="settingRefreshRate">
                         </div>
                     </div>
 
@@ -3463,7 +2173,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                         
                         <div class="form-group">
                             <label>Data Retention (days)</label>
-                            <input type="number" value="30" min="7" max="365">
+                            <input type="number" value="30" min="7" max="365" id="settingRetention">
                             <small>Telemetry data older than this will be deleted</small>
                         </div>
                     </div>
@@ -3480,7 +2190,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                         
                         <div class="form-group">
                             <label>Session Timeout (minutes)</label>
-                            <input type="number" value="30" min="5" max="120">
+                            <input type="number" value="30" min="5" max="120" id="settingTimeout">
                         </div>
                         
                         <div class="toggle-row">
@@ -3488,7 +2198,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                                 <h4>Two-Factor Auth</h4>
                                 <p>Require 2FA for admin users</p>
                             </div>
-                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
+                            <div class="device-toggle off" id="toggle2FA" onclick="this.classList.toggle('off')"></div>
                         </div>
                     </div>
 
@@ -3507,7 +2217,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                                 <h4>Push Notifications</h4>
                                 <p>Receive push alerts on your device</p>
                             </div>
-                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
+                            <div class="device-toggle" id="togglePush" onclick="this.classList.toggle('off')"></div>
                         </div>
                         
                         <div class="toggle-row">
@@ -3515,7 +2225,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                                 <h4>Email Alerts</h4>
                                 <p>Send alerts to registered email</p>
                             </div>
-                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
+                            <div class="device-toggle" id="toggleEmail" onclick="this.classList.toggle('off')"></div>
                         </div>
                         
                         <div class="toggle-row">
@@ -3523,7 +2233,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                                 <h4>SMS Alerts</h4>
                                 <p>Send critical alerts via SMS</p>
                             </div>
-                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
+                            <div class="device-toggle off" id="toggleSMS" onclick="this.classList.toggle('off')"></div>
                         </div>
                     </div>
                 </div>
@@ -3555,23 +2265,69 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
     </div>
 
     <script>
+        // ==========================================
+        // REALISTIC SEA ROUTE DATA
+        // ==========================================
+        
+        // Marseille to Ajaccio (Corsica) - Realistic ferry route
+        const SEA_ROUTE_WAYPOINTS = [
+            {lat: 43.3114, lng: 5.3665, name: "Marseille Port"},
+            {lat: 43.2000, lng: 5.4500, name: "Marseille Bay Exit"},
+            {lat: 43.0000, lng: 5.6000, name: "Offshore Route"},
+            {lat: 42.6000, lng: 6.0000, name: "Mediterranean Lane"},
+            {lat: 42.3000, lng: 6.5000, name: "Corsica Approach"},
+            {lat: 42.0000, lng: 7.0000, name: "West Corsica Coast"},
+            {lat: 41.9209, lng: 8.7427, name: "Ajaccio Port"}
+        ];
+
+        // Crew members with realistic names and assignments
+        const CREW_MEMBERS = [
+            {id: 'MOB-001', name: 'Captain Jean Dupont', role: 'Ship Master', status: 'safe', avatar: 'JD', lat: 43.2965, lng: 5.3698},
+            {id: 'MOB-002', name: 'First Mate Marie Laurent', role: 'Navigation Officer', status: 'safe', avatar: 'ML', lat: 43.2966, lng: 5.3699},
+            {id: 'MOB-003', name: 'Engineer Ahmed Hassan', role: 'Chief Engineer', status: 'safe', avatar: 'AH', lat: 43.2964, lng: 5.3697},
+            {id: 'MOB-004', name: 'Deckhand Luca Rossi', role: 'Deck Crew', status: 'safe', avatar: 'LR', lat: 43.2967, lng: 5.3700}
+        ];
+
+        let currentAlert = null;
+        let simulationInterval = null;
+        let routeProgress = 0;
+
         // Data
-        const devices = [
-            { id: 'MOB-001', name: 'Captain Smith', role: 'Captain', lat: 25.76934, lng: -80.17591, signal: -110.14, status: 'online', lastSeen: '7:11:50 AM' },
-            { id: 'MOB-002', name: 'John Doe', role: 'Deck Hand', lat: 25.75043, lng: -80.18594, signal: -110.16, status: 'online', lastSeen: '6:56:44 AM', alert: true },
-            { id: 'MOB-003', name: 'Jane Wilson', role: 'Deck Hand', lat: 25.76066, lng: -80.17218, signal: -113.33, status: 'offline', lastSeen: '6:55:44 AM' },
-            { id: 'MOB-004', name: 'Mike Johnson', role: 'Engineer', lat: 25.75581, lng: -80.17028, signal: -74.16, status: 'online', lastSeen: '6:54:44 AM' }
+        let devices = [
+            { id: 'MOB-001', name: 'Captain Jean Dupont', role: 'Ship Master', lat: 43.2965, lng: 5.3698, signal: -65, status: 'online', lastSeen: '10:00:00 AM' },
+            { id: 'MOB-002', name: 'First Mate Marie Laurent', role: 'Navigation Officer', lat: 43.2966, lng: 5.3699, signal: -70, status: 'online', lastSeen: '10:00:30 AM' },
+            { id: 'MOB-003', name: 'Engineer Ahmed Hassan', role: 'Chief Engineer', lat: 43.2964, lng: 5.3697, signal: -72, status: 'online', lastSeen: '10:01:00 AM' },
+            { id: 'MOB-004', name: 'Deckhand Luca Rossi', role: 'Deck Crew', lat: 43.2967, lng: 5.3700, signal: -68, status: 'online', lastSeen: '10:01:30 AM' }
         ];
 
-        const alerts = [
-            { id: 1, type: 'MAN OVERBOARD', device: 'MOB-002', severity: 'Critical', time: '7:10:35 AM', message: 'Device MOB-002 at 25.7592, -80.1934', icon: 'fa-user-slash' },
-            { id: 2, type: 'RSSI LOW', device: 'MOB-003', severity: 'High', time: '7:12:48 AM', message: 'Critical signal strength (-115 dBm) for device MOB-003', icon: 'fa-signal' },
-            { id: 3, type: 'GPS LOST', device: 'MOB-001', severity: 'Medium', time: '7:11:48 AM', message: 'GPS fix lost for device MOB-001', icon: 'fa-satellite-dish' }
-        ];
-
-        let currentUser = null;
+        let alerts = [];
         let map = null;
+        let currentLayer = 'satellite';
         let deleteTarget = null;
+
+        // Layer definitions for colorful maps
+        const mapLayers = {
+            satellite: L.layerGroup([
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri',
+                    maxZoom: 19
+                }),
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                })
+            ]),
+            standard: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            })
+        };
 
         // Login
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -3589,6 +2345,7 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                     document.getElementById('currentUser').textContent = username;
                     showApp();
                     showToast('Welcome back, ' + username + '!', 'success');
+                    startRealisticSimulation();
                 } else {
                     btn.innerHTML = 'Sign In';
                     showToast('Invalid credentials', 'error');
@@ -3608,7 +2365,47 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         }
 
         function logout() {
+            stopSimulation();
             location.reload();
+        }
+
+        // Realistic Sea Route Simulation
+        function startRealisticSimulation() {
+            routeProgress = 0;
+            simulationInterval = setInterval(() => {
+                routeProgress += 0.001;
+                if (routeProgress > 1) routeProgress = 0;
+                
+                updateDevicePositions();
+                updateDashboard();
+                
+                if (map) updateMapMarkers();
+            }, 3000);
+        }
+
+        function stopSimulation() {
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+            }
+        }
+
+        function updateDevicePositions() {
+            const waypointIndex = Math.floor(routeProgress * (SEA_ROUTE_WAYPOINTS.length - 1));
+            const nextWaypointIndex = Math.min(waypointIndex + 1, SEA_ROUTE_WAYPOINTS.length - 1);
+            const segmentProgress = (routeProgress * (SEA_ROUTE_WAYPOINTS.length - 1)) - waypointIndex;
+            
+            const current = SEA_ROUTE_WAYPOINTS[waypointIndex];
+            const next = SEA_ROUTE_WAYPOINTS[nextWaypointIndex];
+            
+            devices.forEach((device, index) => {
+                // Add slight variation for each device so they don't overlap
+                const offset = index * 0.0001;
+                device.lat = current.lat + (next.lat - current.lat) * segmentProgress + (Math.random() - 0.5) * 0.001 + offset;
+                device.lng = current.lng + (next.lng - current.lng) * segmentProgress + (Math.random() - 0.5) * 0.001 + offset;
+                device.signal = -65 - Math.floor(Math.random() * 20);
+                device.lastSeen = new Date().toLocaleTimeString();
+            });
         }
 
         // Navigation
@@ -3624,7 +2421,8 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             document.getElementById(page + 'Page').classList.add('active');
             
             const navItems = document.querySelectorAll('.nav-item');
-            const pageIndex = ['dashboard', 'livemap', 'history', 'alerts', 'devices', 'users', 'settings'].indexOf(page);
+            const pages = ['dashboard', 'livemap', 'history', 'alerts', 'devices', 'users', 'settings'];
+            const pageIndex = pages.indexOf(page);
             if (pageIndex >= 0) navItems[pageIndex].classList.add('active');
             
             const titles = {
@@ -3649,23 +2447,58 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         }
 
         function closeEmergency() {
-            document.getElementById('emergencyBanner').style.display = 'none';
+            document.getElementById('emergencyBanner').classList.remove('active');
             document.getElementById('mainContent').classList.remove('with-emergency');
+            currentAlert = null;
+            updateAlertStats();
+        }
+
+        function triggerMOBAlert(device) {
+            currentAlert = {
+                id: Date.now(),
+                type: 'MAN OVERBOARD',
+                device: device.id,
+                name: device.name,
+                severity: 'Critical',
+                time: new Date().toLocaleTimeString(),
+                message: `${device.name} (${device.id}) - MAN OVERBOARD detected`,
+                lat: device.lat,
+                lng: device.lng
+            };
+            
+            alerts.push(currentAlert);
+            device.status = 'alert';
+            
+            // Show emergency banner
+            document.getElementById('emergencyDetails').textContent = 
+                `${device.name} (${device.id}) at ${device.lat.toFixed(4)}, ${device.lng.toFixed(4)}`;
+            document.getElementById('emergencyBanner').classList.add('active');
+            document.getElementById('mainContent').classList.add('with-emergency');
+            
+            updateAlertStats();
+            showToast('MAN OVERBOARD ALERT TRIGGERED!', 'error');
         }
 
         // Dashboard
         function initDashboard() {
             renderPositionsTable();
             renderDashboardAlerts();
+            updateAlertStats();
+        }
+
+        function updateDashboard() {
+            renderPositionsTable();
+            updateAlertStats();
         }
 
         function renderPositionsTable() {
             const container = document.getElementById('positionsTable');
-            const times = ['7:13:48 AM', '7:12:48 AM', '7:11:48 AM', '7:10:48 AM'];
-            const statuses = ['critical', 'alert', 'alert', 'safe'];
-            const statusTexts = ['MAN OVERBOARD', 'Alert', 'Alert', 'Safe'];
             
-            container.innerHTML = devices.map((d, i) => `
+            container.innerHTML = devices.map((d, i) => {
+                const status = d.status === 'alert' ? 'critical' : d.status === 'online' ? 'safe' : 'offline';
+                const statusText = d.status === 'alert' ? 'MAN OVERBOARD' : d.status === 'online' ? 'Safe' : 'Offline';
+                
+                return `
                 <div class="table-row">
                     <div class="device-name">
                         ${d.id}
@@ -3679,17 +2512,17 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                         <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${d.signal.toFixed(1)} dBm</div>
                     </div>
                     <div>
-                        <span class="status-badge ${statuses[i]}">${statusTexts[i]}</span>
+                        <span class="status-badge ${status}">${statusText}</span>
                     </div>
                     <div style="font-size: 12px; color: var(--text-secondary);">
-                        <i class="far fa-clock" style="margin-right: 4px;"></i>${times[i]}
+                        <i class="far fa-clock" style="margin-right: 4px;"></i>${d.lastSeen}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function getSignalBars(signal) {
-            const strength = signal > -90 ? 4 : signal > -100 ? 3 : signal > -110 ? 2 : 1;
+            const strength = signal > -80 ? 4 : signal > -90 ? 3 : signal > -100 ? 2 : 1;
             let bars = '';
             const colorClass = strength >= 3 ? 'active' : strength === 2 ? 'warning' : 'danger';
             for (let i = 1; i <= 4; i++) {
@@ -3700,10 +2533,16 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
 
         function renderDashboardAlerts() {
             const container = document.getElementById('dashboardAlerts');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No active alerts</p>';
+                return;
+            }
+            
             container.innerHTML = alerts.slice(0, 3).map(a => `
                 <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
                     <div class="alert-icon">
-                        <i class="fas ${a.icon}"></i>
+                        <i class="fas ${a.type === 'MAN OVERBOARD' ? 'fa-user-slash' : 'fa-exclamation-triangle'}"></i>
                     </div>
                     <div class="alert-content">
                         <h4>
@@ -3723,58 +2562,173 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             `).join('');
         }
 
-        // Map
+        function updateAlertStats() {
+            const total = alerts.length;
+            const active = alerts.filter(a => !a.resolved).length;
+            const critical = alerts.filter(a => a.severity === 'Critical' && !a.resolved).length;
+            
+            document.getElementById('statActiveAlerts').textContent = active;
+            document.getElementById('alertsTotal').textContent = total;
+            document.getElementById('alertsActive').textContent = active;
+            document.getElementById('alertsCritical').textContent = critical;
+            document.getElementById('alertsResolved').textContent = total - active;
+            
+            // Update map stats
+            const mobCount = devices.filter(d => d.status === 'alert').length;
+            const safeCount = devices.filter(d => d.status === 'online').length;
+            
+            document.getElementById('mapStatSafe').textContent = `Safe: ${safeCount}`;
+            document.getElementById('mapStatMOB').style.display = mobCount > 0 ? 'inline-block' : 'none';
+            document.getElementById('mapStatMOB').textContent = `MAN OVERBOARD: ${mobCount}`;
+        }
+
+        // Map - COLORFUL REALISTIC VERSION
         function initMap() {
             if (map) {
                 map.invalidateSize();
+                updateMapMarkers();
                 return;
             }
             
+            // Initialize map centered on current route position
+            const center = devices[0] || {lat: 43.2965, lng: 5.3698};
+            
             map = L.map('map', {
-                center: [25.77, -80.18],
+                center: [center.lat, center.lng],
                 zoom: 13,
                 zoomControl: false
             });
             
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-            
+            // Add zoom control to bottom right
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             
+            // Add default layer (satellite)
+            mapLayers.satellite.addTo(map);
+            
+            // Draw sea route line
+            const routeLine = L.polyline(SEA_ROUTE_WAYPOINTS.map(wp => [wp.lat, wp.lng]), {
+                color: '#06b6d4',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '10, 10'
+            }).addTo(map);
+            
+            updateMapMarkers();
+            renderMapDeviceList();
+        }
+
+        function updateMapMarkers() {
+            if (!map) return;
+            
+            // Clear existing markers
+            map.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Add device markers
             devices.forEach(d => {
-                const color = d.alert ? '#ef4444' : d.status === 'offline' ? '#6b7280' : '#10b981';
+                const color = d.status === 'alert' ? '#ef4444' : d.status === 'offline' ? '#6b7280' : '#10b981';
+                const radius = d.status === 'alert' ? 20 : 12;
+                
                 const marker = L.circleMarker([d.lat, d.lng], {
-                    radius: d.alert ? 20 : 12,
+                    radius: radius,
                     fillColor: color,
                     color: '#fff',
-                    weight: 2,
+                    weight: 3,
                     opacity: 1,
-                    fillOpacity: 0.8
+                    fillOpacity: 0.9
                 }).addTo(map);
                 
-                if (d.alert) {
-                    L.circleMarker([d.lat, d.lng], {
-                        radius: 30,
+                // Pulse effect for alerts
+                if (d.status === 'alert') {
+                    let growing = true;
+                    const pulse = L.circleMarker([d.lat, d.lng], {
+                        radius: 35,
                         fillColor: color,
                         color: color,
                         weight: 0,
-                        fillOpacity: 0.3
+                        fillOpacity: 0.3,
+                        interactive: false
                     }).addTo(map);
+                    
+                    setInterval(() => {
+                        const currentRadius = pulse.getRadius();
+                        if (growing) {
+                            pulse.setRadius(currentRadius + 1);
+                            if (currentRadius >= 45) growing = false;
+                        } else {
+                            pulse.setRadius(currentRadius - 1);
+                            if (currentRadius <= 35) growing = true;
+                        }
+                    }, 100);
                 }
                 
                 marker.bindPopup(`
-                    <div style="font-family: sans-serif; min-width: 150px;">
-                        <strong>${d.id}</strong><br>
-                        ${d.name}<br>
-                        <span style="color: ${color};">${d.alert ? 'MAN OVERBOARD' : d.status}</span>
+                    <div style="min-width: 200px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                        <div style="background: ${color}; color: white; padding: 10px; margin: -15px -15px 10px -15px; border-radius: 8px 8px 0 0; font-weight: 600;">
+                            ${d.id}
+                        </div>
+                        <div style="padding: 5px 0;">
+                            <strong style="color: #374151;">${d.name}</strong><br>
+                            <span style="color: #6b7280; font-size: 13px;">${d.role}</span>
+                        </div>
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #4b5563;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Status:</span>
+                                <span style="color: ${color}; font-weight: 600;">${d.status === 'alert' ? 'MAN OVERBOARD' : d.status}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Signal:</span>
+                                <span>${d.signal} dBm</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Updated:</span>
+                                <span>${d.lastSeen}</span>
+                            </div>
+                        </div>
                     </div>
                 `);
             });
+        }
+
+        // Map layer switcher
+        function switchMapLayer(layerName) {
+            if (layerName === currentLayer) return;
             
-            renderMapDeviceList();
+            // Remove current layer
+            if (currentLayer === 'satellite') {
+                map.removeLayer(mapLayers.satellite);
+            } else {
+                map.removeLayer(mapLayers[currentLayer]);
+            }
+            
+            // Add new layer
+            if (layerName === 'satellite') {
+                mapLayers.satellite.addTo(map);
+            } else {
+                mapLayers[layerName].addTo(map);
+            }
+            
+            currentLayer = layerName;
+            
+            // Update buttons
+            document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + layerName).classList.add('active');
+        }
+
+        function toggleDeviceFilter() {
+            // Toggle filter dropdown
+            showToast('Device filter clicked', 'success');
+        }
+
+        function refreshMap() {
+            if (map) {
+                map.invalidateSize();
+                updateMapMarkers();
+                showToast('Map refreshed', 'success');
+            }
         }
 
         function renderMapDeviceList() {
@@ -3820,20 +2774,21 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                     const time = new Date(Date.now() - j * 60000 * (i + 1));
                     historyData.push({
                         device: d.id,
+                        name: d.name,
                         time: time.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }),
                         lat: d.lat + (Math.random() - 0.5) * 0.01,
                         lng: d.lng + (Math.random() - 0.5) * 0.01,
                         signal: d.signal + (Math.random() - 0.5) * 10,
-                        status: j === 0 && d.alert ? 'MAN OVERBOARD' : d.status === 'offline' ? 'No Fix' : 'Safe',
+                        status: j === 0 && d.status === 'alert' ? 'MAN OVERBOARD' : d.status === 'offline' ? 'No Fix' : 'Safe',
                         sats: Math.floor(Math.random() * 6) + 6,
-                        details: j === 0 && d.alert ? 'GPS lost + Low RSSI' : d.signal < -110 ? 'RSSI below threshold' : '-'
+                        details: j === 0 && d.status === 'alert' ? 'GPS lost + Low RSSI' : d.signal < -110 ? 'RSSI below threshold' : '-'
                     });
                 }
             });
             
             container.innerHTML = historyData.map(h => `
                 <div class="table-row" style="grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1.2fr;">
-                    <div class="device-name">${h.device}</div>
+                    <div class="device-name">${h.device}<span>${h.name}</span></div>
                     <div style="font-size: 12px;">${h.time}</div>
                     <div class="position" style="font-size: 11px;">${h.lat.toFixed(4)},<br>${h.lng.toFixed(4)}</div>
                     <div>
@@ -3852,13 +2807,24 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             `).join('');
         }
 
+        function exportHistory() {
+            showToast('Exporting history to CSV...', 'success');
+            // Implementation would generate and download CSV
+        }
+
         // Alerts
         function renderAlerts() {
             const container = document.getElementById('alertsList');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 40px;">No alerts to display</p>';
+                return;
+            }
+            
             container.innerHTML = alerts.map(a => `
                 <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
                     <div class="alert-icon">
-                        <i class="fas ${a.icon}"></i>
+                        <i class="fas ${a.type === 'MAN OVERBOARD' ? 'fa-user-slash' : 'fa-exclamation-triangle'}"></i>
                     </div>
                     <div class="alert-content">
                         <h4>
@@ -3879,13 +2845,43 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         }
 
         function resolveAlert(id) {
-            showToast('Alert resolved successfully', 'success');
-            event.target.closest('.alert-card').style.opacity = '0.5';
+            const alert = alerts.find(a => a.id === id);
+            if (alert) {
+                alert.resolved = true;
+                
+                // Reset device status if it was MOB
+                const device = devices.find(d => d.id === alert.device);
+                if (device) {
+                    device.status = 'online';
+                }
+                
+                showToast('Alert resolved successfully', 'success');
+                renderAlerts();
+                renderDashboardAlerts();
+                updateAlertStats();
+                if (map) updateMapMarkers();
+            }
+        }
+
+        function resolveAllAlerts() {
+            alerts.forEach(a => a.resolved = true);
+            devices.forEach(d => d.status = 'online');
+            closeEmergency();
+            showToast('All alerts resolved', 'success');
+            renderAlerts();
+            updateAlertStats();
+            if (map) updateMapMarkers();
         }
 
         // Devices
         function renderDevices() {
             const container = document.getElementById('devicesList');
+            
+            document.getElementById('devicesTotal').textContent = devices.length;
+            document.getElementById('devicesOnline').textContent = devices.filter(d => d.status === 'online').length;
+            document.getElementById('devicesActive').textContent = devices.filter(d => d.status !== 'offline').length;
+            document.getElementById('devicesOffline').textContent = devices.filter(d => d.status === 'offline').length;
+            
             container.innerHTML = devices.map(d => `
                 <div class="device-card">
                     <div class="device-header">
@@ -3905,8 +2901,8 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
                             <span class="status-badge ${d.status}">${d.status}</span>
                             <div class="device-toggle ${d.status === 'offline' ? 'off' : ''}" onclick="toggleDevice(this, '${d.id}')"></div>
                             <div class="device-actions">
-                                <button><i class="fas fa-edit"></i></button>
-                                <button><i class="fas fa-trash"></i></button>
+                                <button onclick="editDevice('${d.id}')"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteDevice('${d.id}')"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
                     </div>
@@ -3937,10 +2933,99 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         function toggleDevice(el, id) {
             el.classList.toggle('off');
             const isOff = el.classList.contains('off');
+            const device = devices.find(d => d.id === id);
+            if (device) {
+                device.status = isOff ? 'offline' : 'online';
+            }
             showToast(`Device ${id} ${isOff ? 'disabled' : 'enabled'}`, 'success');
+            updateAlertStats();
+        }
+
+        function addDevice() {
+            const id = prompt('Enter device ID (e.g., MOB-005):');
+            if (id) {
+                const name = prompt('Enter crew member name:');
+                const role = prompt('Enter role:') || 'Crew Member';
+                
+                devices.push({
+                    id: id,
+                    name: name || 'Unknown',
+                    role: role,
+                    lat: 43.2965,
+                    lng: 5.3698,
+                    signal: -70,
+                    status: 'online',
+                    lastSeen: new Date().toLocaleTimeString()
+                });
+                
+                showToast(`Device ${id} added`, 'success');
+                renderDevices();
+                updateAlertStats();
+            }
+        }
+
+        function editDevice(id) {
+            const device = devices.find(d => d.id === id);
+            if (device) {
+                const newName = prompt('Enter new name:', device.name);
+                if (newName) {
+                    device.name = newName;
+                    showToast('Device updated', 'success');
+                    renderDevices();
+                }
+            }
+        }
+
+        function deleteDevice(id) {
+            if (confirm(`Are you sure you want to delete ${id}?`)) {
+                devices = devices.filter(d => d.id !== id);
+                showToast(`Device ${id} deleted`, 'success');
+                renderDevices();
+                updateAlertStats();
+            }
         }
 
         // Users
+        function addUser() {
+            const username = prompt('Enter username:');
+            if (username) {
+                const email = prompt('Enter email:') || `${username}@mob.local`;
+                const role = confirm('Make this user an admin?') ? 'admin' : 'viewer';
+                
+                showToast(`User ${username} created as ${role}`, 'success');
+                
+                // Add to UI
+                const container = document.getElementById('usersList');
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <div class="user-info-card">
+                        <div class="user-avatar-large" style="color: ${role === 'admin' ? 'var(--accent-cyan)' : '#6b7280'};">
+                            <i class="fas fa-${role === 'admin' ? 'shield-alt' : 'user'}"></i>
+                        </div>
+                        <div>
+                            <h4>${username}</h4>
+                            <p>${email}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span class="role-badge ${role}">${role}</span>
+                        <button class="btn-small" style="border: none; background: transparent; color: var(--text-secondary);" onclick="deleteUser('${username}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+                
+                document.getElementById('usersTotal').textContent = parseInt(document.getElementById('usersTotal').textContent) + 1;
+                if (role === 'admin') {
+                    document.getElementById('usersAdmin').textContent = parseInt(document.getElementById('usersAdmin').textContent) + 1;
+                } else {
+                    document.getElementById('usersViewer').textContent = parseInt(document.getElementById('usersViewer').textContent) + 1;
+                }
+            }
+        }
+
         function deleteUser(username) {
             deleteTarget = username;
             document.getElementById('deleteModal').classList.add('active');
@@ -3955,6 +3040,13 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
             if (deleteTarget) {
                 showToast(`User ${deleteTarget} deleted`, 'success');
                 closeModal();
+                // Remove from UI
+                const cards = document.querySelectorAll('.user-card');
+                cards.forEach(card => {
+                    if (card.querySelector('h4').textContent === deleteTarget) {
+                        card.remove();
+                    }
+                });
             }
         }
 
@@ -3992,6 +3084,14 @@ console.log('%cUse receiveLoRaPacket(packet) to ingest telemetry data.\n','color
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.custom-select')) {
                 document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('active'));
+            }
+        });
+
+        // Keyboard shortcut for MOB simulation (Shift+M)
+        document.addEventListener('keydown', function(e) {
+            if (e.shiftKey && e.key === 'M') {
+                const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+                triggerMOBAlert(randomDevice);
             }
         });
     </script>
