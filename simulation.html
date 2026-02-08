@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOB Guard - Realistic Telemetry Simulation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --marine-dark: #0a1628;
+            --marine-darker: #070f1a;
+            --marine-accent: #00d4ff;
+            --alert-red: #ff3333;
+            --warning-yellow: #ffaa00;
+            --safe-green: #00ff88;
+            --text-primary: #e0f7ff;
+            --text-secondary: #8b9cb5;
+            --border-color: #1e3a5f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--marine-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Header */
+        .header {
+            height: 60px;
+            background: rgba(10, 22, 40, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            z-index: 1000;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--marine-accent);
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--marine-accent);
+            color: var(--marine-darker);
+        }
+
+        /* Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(10, 22, 40, 0.9);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--marine-accent);
+            transform: translateX(3px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--marine-accent);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border-left: 3px solid;
+        }
+
+        .status-safe { border-color: var(--safe-green); }
+        .status-warning { border-color: var(--warning-yellow); }
+        .status-alert { border-color: var(--alert-red); }
+        .status-mob { border-color: #ff00ff; }
+
+        .status-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Map Container - FIXED HEIGHT */
+        .map-container {
+            position: relative;
+            background: #1a1f2e;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100% !important;
+            width: 100% !important;
+            background: #001122;
+            z-index: 1;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(10, 22, 40, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .coord-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--marine-accent);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .env-data {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(10, 22, 40, 0.9);
+            border-left: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        select, input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        input[type="range"] {
+            padding: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--marine-accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--marine-accent), #0099cc);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff3333, #cc0000);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 20px rgba(255, 51, 51, 0.4);
+        }
+
+        .alert-log {
+            max-height: 250px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--marine-accent);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+        }
+
+        .log-entry.critical {
+            border-left-color: var(--alert-red);
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        /* MOB Modal */
+        .mob-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mob-modal.active {
+            display: flex;
+        }
+
+        .mob-content {
+            background: linear-gradient(135deg, #1a0a0a 0%, #2a1515 100%);
+            border: 2px solid var(--alert-red);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 51, 51, 0.5);
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 50px rgba(255, 51, 51, 0.5); }
+            50% { box-shadow: 0 0 80px rgba(255, 51, 51, 0.8); }
+        }
+
+        .mob-icon {
+            font-size: 4rem;
+            color: var(--alert-red);
+            margin-bottom: 15px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .mob-title {
+            font-size: 2.2rem;
+            color: var(--alert-red);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .mob-details {
+            margin: 20px 0;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .mob-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .mob-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-ack {
+            background: var(--alert-red);
+            color: white;
+        }
+
+        .btn-ack:hover {
+            background: #ff5555;
+            transform: scale(1.05);
+        }
+
+        .btn-pattern {
+            background: transparent;
+            border: 2px solid var(--warning-yellow);
+            color: var(--warning-yellow);
+        }
+
+        .btn-pattern:hover {
+            background: var(--warning-yellow);
+            color: black;
+        }
+
+        .survival-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .survival-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--alert-red), var(--warning-yellow), var(--safe-green));
+            transition: width 1s;
+        }
+
+        /* Map Marker Styles */
+        .vessel-icon {
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+            font-size: 24px;
+            color: #00d4ff;
+        }
+
+        .crew-icon {
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .crew-safe { background: #00ff88; color: #003311; }
+        .crew-warning { background: #ffaa00; color: #331100; }
+        .crew-danger { background: #ff3333; color: white; animation: blink-red 1s infinite; }
+
+        @keyframes blink-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .mob-marker {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #ff3333 0%, transparent 70%);
+            border-radius: 50%;
+            animation: ripple 2s infinite;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 250px 1fr 300px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 300px;
+            }
+            .sidebar, .control-panel {
+                max-height: 300px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--marine-darker); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--marine-accent); }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>MOB Guard - Realistic Simulation</span>
+        </div>
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="panel-title">
+                <i class="fas fa-chart-line"></i>
+                Vessel Telemetry
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Speed Over Ground</span>
+                    <i class="fas fa-ship"></i>
+                </div>
+                <div class="stat-value" id="speedValue">18.5 kn</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Course Over Ground</span>
+                    <i class="fas fa-compass"></i>
+                </div>
+                <div class="stat-value" id="courseValue">142°</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Wind Speed</span>
+                    <i class="fas fa-wind"></i>
+                </div>
+                <div class="stat-value" id="windValue">24 kn</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>Sea State</span>
+                    <i class="fas fa-water"></i>
+                </div>
+                <div class="stat-value" id="seaValue">2.3 m</div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-item status-safe">
+                    <span class="status-number" id="safeCount">4</span>
+                    <span>Safe</span>
+                </div>
+                <div class="status-item status-warning">
+                    <span class="status-number" id="warningCount">0</span>
+                    <span>Warning</span>
+                </div>
+                <div class="status-item status-alert">
+                    <span class="status-number" id="alertCount">0</span>
+                    <span>Alert</span>
+                </div>
+                <div class="status-item status-mob">
+                    <span class="status-number" id="mobCount">0</span>
+                    <span>MOB</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Map - FIXED -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <div class="map-overlay">
+                <div class="coord-display" id="vesselCoords">
+                    <div>Lat: 43.2965° N</div>
+                    <div>Lng: 5.3698° E</div>
+                </div>
+                <div class="env-data">
+                    <div><i class="fas fa-thermometer-half"></i> Water: 18.5°C</div>
+                    <div><i class="fas fa-clock"></i> UTC: <span id="utcTime">14:30:25</span></div>
+                    <div><i class="fas fa-satellite"></i> GPS: 12 sats</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Control Panel -->
+        <aside class="control-panel">
+            <div class="panel-title">
+                <i class="fas fa-sliders-h"></i>
+                Simulation Controls
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Scenario Type</label>
+                <select id="scenarioSelect" onchange="changeScenario()">
+                    <option value="normal">Normal Operations</option>
+                    <option value="storm">Storm Conditions</option>
+                    <option value="night">Night Operations</option>
+                    <option value="mob">MOB Drill</option>
+                    <option value="emergency">Emergency Response</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Simulation Speed</label>
+                <input type="range" id="simSpeed" min="1" max="10" value="5" oninput="updateSimSpeed()">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                    <span>1x</span>
+                    <span id="speedLabel">5x</span>
+                    <span>10x</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Crew Count</label>
+                <input type="number" id="crewCount" value="4" min="1" max="20" onchange="updateCrewCount()">
+            </div>
+
+            <button class="btn-primary" onclick="triggerRandomMOB()">
+                <i class="fas fa-exclamation-triangle"></i>
+                Trigger Random MOB
+            </button>
+
+            <button class="btn-primary btn-danger" onclick="triggerAllMOB()">
+                <i class="fas fa-users-slash"></i>
+                Trigger Mass Casualty
+            </button>
+
+            <button class="btn-primary" onclick="resetSimulation()" style="background: #444;">
+                <i class="fas fa-redo"></i>
+                Reset Simulation
+            </button>
+
+            <div class="panel-title" style="margin-top: 20px;">
+                <i class="fas fa-history"></i>
+                Alert Log
+            </div>
+            <div class="alert-log" id="alertLog">
+                <div class="log-entry">
+                    <div class="log-time">14:30:25 UTC</div>
+                    <div>Simulation started - Normal operations</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- MOB Alert Modal -->
+    <div class="mob-modal" id="mobModal">
+        <div class="mob-content">
+            <div class="mob-icon">
+                <i class="fas fa-life-ring"></i>
+            </div>
+            <div class="mob-title">MAN OVERBOARD</div>
+            <div id="mobCrewName" style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 5px;">Crew Member: John Smith</div>
+            <div id="mobDeviceId" style="color: var(--marine-accent); font-size: 0.9rem;">Device: MOB-002</div>
+            
+            <div class="mob-details">
+                <div><strong>Position:</strong> <span id="mobPosition">43.2965° N, 5.3698° E</span></div>
+                <div><strong>Time:</strong> <span id="mobTime">14:30:25 UTC</span></div>
+                <div><strong>Water Temp:</strong> 18.5°C</div>
+                <div><strong>Sea State:</strong> Moderate</div>
+                <div style="margin-top: 10px;">
+                    <strong>Survival Probability:</strong>
+                    <div class="survival-bar">
+                        <div class="survival-fill" id="survivalBar" style="width: 85%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mob-actions">
+                <button class="mob-btn btn-ack" onclick="acknowledgeMOB()">
+                    <i class="fas fa-check"></i> Acknowledge
+                </button>
+                <button class="mob-btn btn-pattern" onclick="initiateSearchPattern()">
+                    <i class="fas fa-search-location"></i> Search Pattern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // REALISTIC SEA ROUTE DATA
+        // ==========================================
+        
+        // Marseille to Ajaccio (Corsica) - Realistic ferry route
+        const SEA_ROUTE_WAYPOINTS = [
+            {lat: 43.3114, lng: 5.3665, name: "Marseille Port"}, // Starting point - Marseille
+            {lat: 43.2000, lng: 5.4500, name: "Marseille Bay Exit"},
+            {lat: 43.0000, lng: 5.6000, name: "Offshore Route"},
+            {lat: 42.6000, lng: 6.0000, name: "Mediterranean Lane"},
+            {lat: 42.3000, lng: 6.5000, name: "Corsica Approach"},
+            {lat: 42.0000, lng: 7.0000, name: "West Corsica Coast"},
+            {lat: 41.9209, lng: 8.7427, name: "Ajaccio Port"} // Destination - Ajaccio
+        ];
+
+        // Crew members with realistic names and assignments
+        const CREW_MEMBERS = [
+            {id: 'MOB-001', name: 'Captain Jean Dupont', role: 'Ship Master', status: 'safe', avatar: 'JD', lat: 43.2965, lng: 5.3698},
+            {id: 'MOB-002', name: 'First Mate Marie Laurent', role: 'Navigation Officer', status: 'safe', avatar: 'ML', lat: 43.2966, lng: 5.3699},
+            {id: 'MOB-003', name: 'Engineer Ahmed Hassan', role: 'Chief Engineer', status: 'safe', avatar: 'AH', lat: 43.2964, lng: 5.3697},
+            {id: 'MOB-004', name: 'Deckhand Luca Rossi', role: 'Deck Crew', status: 'safe', avatar: 'LR', lat: 43.2967, lng: 5.3700}
+        ];
+
+        let currentAlert = null;
+        let simulationInterval = null;
+        let routeProgress = 0;
+
+        // Data
+        let devices = [
+            { id: 'MOB-001', name: 'Captain Jean Dupont', role: 'Ship Master', lat: 43.2965, lng: 5.3698, signal: -65, status: 'online', lastSeen: '10:00:00 AM' },
+            { id: 'MOB-002', name: 'First Mate Marie Laurent', role: 'Navigation Officer', lat: 43.2966, lng: 5.3699, signal: -70, status: 'online', lastSeen: '10:00:30 AM' },
+            { id: 'MOB-003', name: 'Engineer Ahmed Hassan', role: 'Chief Engineer', lat: 43.2964, lng: 5.3697, signal: -72, status: 'online', lastSeen: '10:01:00 AM' },
+            { id: 'MOB-004', name: 'Deckhand Luca Rossi', role: 'Deck Crew', lat: 43.2967, lng: 5.3700, signal: -68, status: 'online', lastSeen: '10:01:30 AM' }
+        ];
+
+        let alerts = [];
+        let map = null;
+        let currentLayer = 'satellite';
+        let deleteTarget = null;
+
+        // Layer definitions for colorful maps
+        const mapLayers = {
+            satellite: L.layerGroup([
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri',
+                    maxZoom: 19
+                }),
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                })
+            ]),
+            standard: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            })
+        };
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = '<span class="loading"></span> Signing in...';
+            
+            setTimeout(() => {
+                if ((username === 'admin' && password === 'admin123') || 
+                    (username === 'viewer' && password === 'viewer123')) {
+                    currentUser = { username, role: username === 'admin' ? 'ADMIN' : 'VIEWER' };
+                    document.getElementById('currentUser').textContent = username;
+                    showApp();
+                    showToast('Welcome back, ' + username + '!', 'success');
+                    startRealisticSimulation();
+                } else {
+                    btn.innerHTML = 'Sign In';
+                    showToast('Invalid credentials', 'error');
+                }
+            }, 1000);
+        });
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+            initDashboard();
+        }
+
+        function logout() {
+            stopSimulation();
+            location.reload();
+        }
+
+        // Realistic Sea Route Simulation
+        function startRealisticSimulation() {
+            routeProgress = 0;
+            simulationInterval = setInterval(() => {
+                routeProgress += 0.001;
+                if (routeProgress > 1) routeProgress = 0;
+                
+                updateDevicePositions();
+                updateDashboard();
+                
+                if (map) updateMapMarkers();
+            }, 3000);
+        }
+
+        function stopSimulation() {
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+            }
+        }
+
+        function updateDevicePositions() {
+            const waypointIndex = Math.floor(routeProgress * (SEA_ROUTE_WAYPOINTS.length - 1));
+            const nextWaypointIndex = Math.min(waypointIndex + 1, SEA_ROUTE_WAYPOINTS.length - 1);
+            const segmentProgress = (routeProgress * (SEA_ROUTE_WAYPOINTS.length - 1)) - waypointIndex;
+            
+            const current = SEA_ROUTE_WAYPOINTS[waypointIndex];
+            const next = SEA_ROUTE_WAYPOINTS[nextWaypointIndex];
+            
+            devices.forEach((device, index) => {
+                // Add slight variation for each device so they don't overlap
+                const offset = index * 0.0001;
+                device.lat = current.lat + (next.lat - current.lat) * segmentProgress + (Math.random() - 0.5) * 0.001 + offset;
+                device.lng = current.lng + (next.lng - current.lng) * segmentProgress + (Math.random() - 0.5) * 0.001 + offset;
+                device.signal = -65 - Math.floor(Math.random() * 20);
+                device.lastSeen = new Date().toLocaleTimeString();
+            });
+        }
+
+        // Navigation
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function navigateTo(page) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(page + 'Page').classList.add('active');
+            
+            const navItems = document.querySelectorAll('.nav-item');
+            const pages = ['dashboard', 'livemap', 'history', 'alerts', 'devices', 'users', 'settings'];
+            const pageIndex = pages.indexOf(page);
+            if (pageIndex >= 0) navItems[pageIndex].classList.add('active');
+            
+            const titles = {
+                dashboard: { title: 'Dashboard', subtitle: 'Real-time vessel monitoring overview' },
+                livemap: { title: 'Live Map', subtitle: 'Real-time vessel tracking and positioning' },
+                history: { title: 'History', subtitle: 'Telemetry records and event logs' },
+                alerts: { title: 'Alerts', subtitle: 'Manage and respond to security alerts' },
+                devices: { title: 'Devices', subtitle: 'Manage MOB tracking devices' },
+                users: { title: 'Users', subtitle: 'Manage system users and permissions' },
+                settings: { title: 'Settings', subtitle: 'System configuration and preferences' }
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[page].title;
+            document.getElementById('pageSubtitle').textContent = titles[page].subtitle;
+            
+            toggleSidebar();
+            
+            if (page === 'livemap') setTimeout(initMap, 100);
+            if (page === 'history') renderHistory();
+            if (page === 'alerts') renderAlerts();
+            if (page === 'devices') renderDevices();
+        }
+
+        function closeEmergency() {
+            document.getElementById('emergencyBanner').classList.remove('active');
+            document.getElementById('mainContent').classList.remove('with-emergency');
+            currentAlert = null;
+            updateAlertStats();
+        }
+
+        function triggerMOBAlert(device) {
+            currentAlert = {
+                id: Date.now(),
+                type: 'MAN OVERBOARD',
+                device: device.id,
+                name: device.name,
+                severity: 'Critical',
+                time: new Date().toLocaleTimeString(),
+                message: `${device.name} (${device.id}) - MAN OVERBOARD detected`,
+                lat: device.lat,
+                lng: device.lng
+            };
+            
+            alerts.push(currentAlert);
+            device.status = 'alert';
+            
+            // Show emergency banner
+            document.getElementById('emergencyDetails').textContent = 
+                `${device.name} (${device.id}) at ${device.lat.toFixed(4)}, ${device.lng.toFixed(4)}`;
+            document.getElementById('emergencyBanner').classList.add('active');
+            document.getElementById('mainContent').classList.add('with-emergency');
+            
+            updateAlertStats();
+            showToast('MAN OVERBOARD ALERT TRIGGERED!', 'error');
+        }
+
+        // Dashboard
+        function initDashboard() {
+            renderPositionsTable();
+            renderDashboardAlerts();
+            updateAlertStats();
+        }
+
+        function updateDashboard() {
+            renderPositionsTable();
+            updateAlertStats();
+        }
+
+        function renderPositionsTable() {
+            const container = document.getElementById('positionsTable');
+            
+            container.innerHTML = devices.map((d, i) => {
+                const status = d.status === 'alert' ? 'critical' : d.status === 'online' ? 'safe' : 'offline';
+                const statusText = d.status === 'alert' ? 'MAN OVERBOARD' : d.status === 'online' ? 'Safe' : 'Offline';
+                
+                return `
+                <div class="table-row">
+                    <div class="device-name">
+                        ${d.id}
+                        <span>${d.name}</span>
+                    </div>
+                    <div class="position">${d.lat.toFixed(4)},<br>${d.lng.toFixed(4)}</div>
+                    <div>
+                        <div class="signal-bars">
+                            ${getSignalBars(d.signal)}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${d.signal.toFixed(1)} dBm</div>
+                    </div>
+                    <div>
+                        <span class="status-badge ${status}">${statusText}</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">
+                        <i class="far fa-clock" style="margin-right: 4px;"></i>${d.lastSeen}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function getSignalBars(signal) {
+            const strength = signal > -80 ? 4 : signal > -90 ? 3 : signal > -100 ? 2 : 1;
+            let bars = '';
+            const colorClass = strength >= 3 ? 'active' : strength === 2 ? 'warning' : 'danger';
+            for (let i = 1; i <= 4; i++) {
+                bars += `<div class="signal-bar ${i <= strength ? colorClass : ''}"></div>`;
+            }
+            return bars;
+        }
+
+        function renderDashboardAlerts() {
+            const container = document.getElementById('dashboardAlerts');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No active alerts</p>';
+                return;
+            }
+            
+            container.innerHTML = alerts.slice(0, 3).map(a => `
+                <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
+                    <div class="alert-icon">
+                        <i class="fas ${a.type === 'MAN OVERBOARD' ? 'fa-user-slash' : 'fa-exclamation-triangle'}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>
+                            ${a.type}
+                            <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
+                        </h4>
+                        <p>${a.message}</p>
+                        <div class="alert-meta">
+                            <span><i class="far fa-clock"></i> ${a.time}</span>
+                            <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
+                        </div>
+                    </div>
+                    <button class="btn-resolve" onclick="resolveAlert(${a.id})">
+                        <i class="fas fa-check"></i> Resolve
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateAlertStats() {
+            const total = alerts.length;
+            const active = alerts.filter(a => !a.resolved).length;
+            const critical = alerts.filter(a => a.severity === 'Critical' && !a.resolved).length;
+            
+            document.getElementById('statActiveAlerts').textContent = active;
+            document.getElementById('alertsTotal').textContent = total;
+            document.getElementById('alertsActive').textContent = active;
+            document.getElementById('alertsCritical').textContent = critical;
+            document.getElementById('alertsResolved').textContent = total - active;
+            
+            // Update map stats
+            const mobCount = devices.filter(d => d.status === 'alert').length;
+            const safeCount = devices.filter(d => d.status === 'online').length;
+            
+            document.getElementById('mapStatSafe').textContent = `Safe: ${safeCount}`;
+            document.getElementById('mapStatMOB').style.display = mobCount > 0 ? 'inline-block' : 'none';
+            document.getElementById('mapStatMOB').textContent = `MAN OVERBOARD: ${mobCount}`;
+        }
+
+        // Map - COLORFUL REALISTIC VERSION
+        function initMap() {
+            if (map) {
+                map.invalidateSize();
+                updateMapMarkers();
+                return;
+            }
+            
+            // Initialize map centered on current route position
+            const center = devices[0] || {lat: 43.2965, lng: 5.3698};
+            
+            map = L.map('map', {
+                center: [center.lat, center.lng],
+                zoom: 13,
+                zoomControl: false
+            });
+            
+            // Add zoom control to bottom right
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            
+            // Add default layer (satellite)
+            mapLayers.satellite.addTo(map);
+            
+            // Draw sea route line
+            const routeLine = L.polyline(SEA_ROUTE_WAYPOINTS.map(wp => [wp.lat, wp.lng]), {
+                color: '#06b6d4',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '10, 10'
+            }).addTo(map);
+            
+            updateMapMarkers();
+            renderMapDeviceList();
+        }
+
+        function updateMapMarkers() {
+            if (!map) return;
+            
+            // Clear existing markers
+            map.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Add device markers
+            devices.forEach(d => {
+                const color = d.status === 'alert' ? '#ef4444' : d.status === 'offline' ? '#6b7280' : '#10b981';
+                const radius = d.status === 'alert' ? 20 : 12;
+                
+                const marker = L.circleMarker([d.lat, d.lng], {
+                    radius: radius,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+                
+                // Pulse effect for alerts
+                if (d.status === 'alert') {
+                    let growing = true;
+                    const pulse = L.circleMarker([d.lat, d.lng], {
+                        radius: 35,
+                        fillColor: color,
+                        color: color,
+                        weight: 0,
+                        fillOpacity: 0.3,
+                        interactive: false
+                    }).addTo(map);
+                    
+                    setInterval(() => {
+                        const currentRadius = pulse.getRadius();
+                        if (growing) {
+                            pulse.setRadius(currentRadius + 1);
+                            if (currentRadius >= 45) growing = false;
+                        } else {
+                            pulse.setRadius(currentRadius - 1);
+                            if (currentRadius <= 35) growing = true;
+                        }
+                    }, 100);
+                }
+                
+                marker.bindPopup(`
+                    <div style="min-width: 200px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                        <div style="background: ${color}; color: white; padding: 10px; margin: -15px -15px 10px -15px; border-radius: 8px 8px 0 0; font-weight: 600;">
+                            ${d.id}
+                        </div>
+                        <div style="padding: 5px 0;">
+                            <strong style="color: #374151;">${d.name}</strong><br>
+                            <span style="color: #6b7280; font-size: 13px;">${d.role}</span>
+                        </div>
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #4b5563;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Status:</span>
+                                <span style="color: ${color}; font-weight: 600;">${d.status === 'alert' ? 'MAN OVERBOARD' : d.status}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Signal:</span>
+                                <span>${d.signal} dBm</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Updated:</span>
+                                <span>${d.lastSeen}</span>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // Map layer switcher
+        function switchMapLayer(layerName) {
+            if (layerName === currentLayer) return;
+            
+            // Remove current layer
+            if (currentLayer === 'satellite') {
+                map.removeLayer(mapLayers.satellite);
+            } else {
+                map.removeLayer(mapLayers[currentLayer]);
+            }
+            
+            // Add new layer
+            if (layerName === 'satellite') {
+                mapLayers.satellite.addTo(map);
+            } else {
+                mapLayers[layerName].addTo(map);
+            }
+            
+            currentLayer = layerName;
+            
+            // Update buttons
+            document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + layerName).classList.add('active');
+        }
+
+        function toggleDeviceFilter() {
+            // Toggle filter dropdown
+            showToast('Device filter clicked', 'success');
+        }
+
+        function refreshMap() {
+            if (map) {
+                map.invalidateSize();
+                updateMapMarkers();
+                showToast('Map refreshed', 'success');
+            }
+        }
+
+        function renderMapDeviceList() {
+            const container = document.getElementById('mapDeviceList');
+            container.innerHTML = devices.map(d => `
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-title ${d.status}">
+                            <div class="device-icon">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                            <div>
+                                <h4>${d.id}</h4>
+                                <p>${d.name}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <label>Latitude</label>
+                            <value>${d.lat.toFixed(5)}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Longitude</label>
+                            <value>${d.lng.toFixed(5)}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Seen</label>
+                            <value>${d.lastSeen}</value>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // History
+        function renderHistory() {
+            const container = document.getElementById('historyTable');
+            const historyData = [];
+            
+            devices.forEach((d, i) => {
+                for (let j = 0; j < 5; j++) {
+                    const time = new Date(Date.now() - j * 60000 * (i + 1));
+                    historyData.push({
+                        device: d.id,
+                        name: d.name,
+                        time: time.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }),
+                        lat: d.lat + (Math.random() - 0.5) * 0.01,
+                        lng: d.lng + (Math.random() - 0.5) * 0.01,
+                        signal: d.signal + (Math.random() - 0.5) * 10,
+                        status: j === 0 && d.status === 'alert' ? 'MAN OVERBOARD' : d.status === 'offline' ? 'No Fix' : 'Safe',
+                        sats: Math.floor(Math.random() * 6) + 6,
+                        details: j === 0 && d.status === 'alert' ? 'GPS lost + Low RSSI' : d.signal < -110 ? 'RSSI below threshold' : '-'
+                    });
+                }
+            });
+            
+            container.innerHTML = historyData.map(h => `
+                <div class="table-row" style="grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1.2fr;">
+                    <div class="device-name">${h.device}<span>${h.name}</span></div>
+                    <div style="font-size: 12px;">${h.time}</div>
+                    <div class="position" style="font-size: 11px;">${h.lat.toFixed(4)},<br>${h.lng.toFixed(4)}</div>
+                    <div>
+                        <div class="signal-bars">
+                            ${getSignalBars(h.signal)}
+                        </div>
+                    </div>
+                    <div>
+                        ${h.status === 'MAN OVERBOARD' ? '<span style="color: var(--accent-red); font-weight: 600; font-size: 11px;">MAN OVERBOARD</span>' : 
+                          h.status === 'No Fix' ? '<span style="color: var(--accent-orange); font-size: 11px;">No Fix</span>' :
+                          '<span style="color: var(--accent-green); font-size: 11px;">● Safe</span>'}
+                        <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">${h.sats} sats</div>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">${h.details}</div>
+                </div>
+            `).join('');
+        }
+
+        function exportHistory() {
+            showToast('Exporting history to CSV...', 'success');
+            // Implementation would generate and download CSV
+        }
+
+        // Alerts
+        function renderAlerts() {
+            const container = document.getElementById('alertsList');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 40px;">No alerts to display</p>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(a => `
+                <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
+                    <div class="alert-icon">
+                        <i class="fas ${a.type === 'MAN OVERBOARD' ? 'fa-user-slash' : 'fa-exclamation-triangle'}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>
+                            ${a.type}
+                            <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
+                        </h4>
+                        <p>${a.message}</p>
+                        <div class="alert-meta">
+                            <span><i class="far fa-clock"></i> ${a.time}</span>
+                            <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
+                        </div>
+                    </div>
+                    <button class="btn-resolve" onclick="resolveAlert(${a.id})">
+                        <i class="fas fa-check"></i> Resolve
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function resolveAlert(id) {
+            const alert = alerts.find(a => a.id === id);
+            if (alert) {
+                alert.resolved = true;
+                
+                // Reset device status if it was MOB
+                const device = devices.find(d => d.id === alert.device);
+                if (device) {
+                    device.status = 'online';
+                }
+                
+                showToast('Alert resolved successfully', 'success');
+                renderAlerts();
+                renderDashboardAlerts();
+                updateAlertStats();
+                if (map) updateMapMarkers();
+            }
+        }
+
+        function resolveAllAlerts() {
+            alerts.forEach(a => a.resolved = true);
+            devices.forEach(d => d.status = 'online');
+            closeEmergency();
+            showToast('All alerts resolved', 'success');
+            renderAlerts();
+            updateAlertStats();
+            if (map) updateMapMarkers();
+        }
+
+        // Devices
+        function renderDevices() {
+            const container = document.getElementById('devicesList');
+            
+            document.getElementById('devicesTotal').textContent = devices.length;
+            document.getElementById('devicesOnline').textContent = devices.filter(d => d.status === 'online').length;
+            document.getElementById('devicesActive').textContent = devices.filter(d => d.status !== 'offline').length;
+            document.getElementById('devicesOffline').textContent = devices.filter(d => d.status === 'offline').length;
+            
+            container.innerHTML = devices.map(d => `
+                <div class="device-card">
+                    <div class="device-header">
+                        <div class="device-title ${d.status}">
+                            <div class="device-icon">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                            <div>
+                                <h4>${d.id}</h4>
+                                <p>
+                                    <i class="far fa-user"></i> ${d.name} 
+                                    <span style="color: var(--text-secondary);">(${d.role})</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="device-status">
+                            <span class="status-badge ${d.status}">${d.status}</span>
+                            <div class="device-toggle ${d.status === 'offline' ? 'off' : ''}" onclick="toggleDevice(this, '${d.id}')"></div>
+                            <div class="device-actions">
+                                <button onclick="editDevice('${d.id}')"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteDevice('${d.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="signal-info">
+                        <div class="signal-bars">
+                            ${getSignalBars(d.signal)}
+                        </div>
+                        <span>${d.signal.toFixed(1)} dBm</span>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <label>Latitude</label>
+                            <value>${d.lat.toFixed(5)}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Longitude</label>
+                            <value>${d.lng.toFixed(5)}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Seen</label>
+                            <value>${d.lastSeen}</value>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDevice(el, id) {
+            el.classList.toggle('off');
+            const isOff = el.classList.contains('off');
+            const device = devices.find(d => d.id === id);
+            if (device) {
+                device.status = isOff ? 'offline' : 'online';
+            }
+            showToast(`Device ${id} ${isOff ? 'disabled' : 'enabled'}`, 'success');
+            updateAlertStats();
+        }
+
+        function addDevice() {
+            const id = prompt('Enter device ID (e.g., MOB-005):');
+            if (id) {
+                const name = prompt('Enter crew member name:');
+                const role = prompt('Enter role:') || 'Crew Member';
+                
+                devices.push({
+                    id: id,
+                    name: name || 'Unknown',
+                    role: role,
+                    lat: 43.2965,
+                    lng: 5.3698,
+                    signal: -70,
+                    status: 'online',
+                    lastSeen: new Date().toLocaleTimeString()
+                });
+                
+                showToast(`Device ${id} added`, 'success');
+                renderDevices();
+                updateAlertStats();
+            }
+        }
+
+        function editDevice(id) {
+            const device = devices.find(d => d.id === id);
+            if (device) {
+                const newName = prompt('Enter new name:', device.name);
+                if (newName) {
+                    device.name = newName;
+                    showToast('Device updated', 'success');
+                    renderDevices();
+                }
+            }
+        }
+
+        function deleteDevice(id) {
+            if (confirm(`Are you sure you want to delete ${id}?`)) {
+                devices = devices.filter(d => d.id !== id);
+                showToast(`Device ${id} deleted`, 'success');
+                renderDevices();
+                updateAlertStats();
+            }
+        }
+
+        // Users
+        function addUser() {
+            const username = prompt('Enter username:');
+            if (username) {
+                const email = prompt('Enter email:') || `${username}@mob.local`;
+                const role = confirm('Make this user an admin?') ? 'admin' : 'viewer';
+                
+                showToast(`User ${username} created as ${role}`, 'success');
+                
+                // Add to UI
+                const container = document.getElementById('usersList');
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <div class="user-info-card">
+                        <div class="user-avatar-large" style="color: ${role === 'admin' ? 'var(--accent-cyan)' : '#6b7280'};">
+                            <i class="fas fa-${role === 'admin' ? 'shield-alt' : 'user'}"></i>
+                        </div>
+                        <div>
+                            <h4>${username}</h4>
+                            <p>${email}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span class="role-badge ${role}">${role}</span>
+                        <button class="btn-small" style="border: none; background: transparent; color: var(--text-secondary);" onclick="deleteUser('${username}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+                
+                document.getElementById('usersTotal').textContent = parseInt(document.getElementById('usersTotal').textContent) + 1;
+                if (role === 'admin') {
+                    document.getElementById('usersAdmin').textContent = parseInt(document.getElementById('usersAdmin').textContent) + 1;
+                } else {
+                    document.getElementById('usersViewer').textContent = parseInt(document.getElementById('usersViewer').textContent) + 1;
+                }
+            }
+        }
+
+        function deleteUser(username) {
+            deleteTarget = username;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            deleteTarget = null;
+        }
+
+        function confirmDelete() {
+            if (deleteTarget) {
+                showToast(`User ${deleteTarget} deleted`, 'success');
+                closeModal();
+                // Remove from UI
+                const cards = document.querySelectorAll('.user-card');
+                cards.forEach(card => {
+                    if (card.querySelector('h4').textContent === deleteTarget) {
+                        card.remove();
+                    }
+                });
+            }
+        }
+
+        // Settings
+        function selectOption(el, value) {
+            el.parentElement.parentElement.querySelector('input').value = value;
+            el.parentElement.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function saveSettings() {
+            showToast('Settings saved successfully', 'success');
+        }
+
+        // Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = 'toast show ' + type;
+            document.getElementById('toastMessage').textContent = message;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Update emergency time
+        setInterval(() => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' });
+            const [time, ampm] = timeStr.split(' ');
+            document.getElementById('emergencyTime').textContent = time;
+        }, 1000);
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('active'));
+            }
+        });
+
+        // Keyboard shortcut for MOB simulation (Shift+M)
+        document.addEventListener('keydown', function(e) {
+            if (e.shiftKey && e.key === 'M') {
+                const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+                triggerMOBAlert(randomDevice);
+            }
+        });
+    </script>
+</body>
+</html>
